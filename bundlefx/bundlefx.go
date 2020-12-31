@@ -4,17 +4,22 @@ import (
 	"context"
 	"net/http"
 
+	"cloud.google.com/go/firestore"
 	"github.com/gorilla/mux"
-	"github.com/preslavmihaylov/fxappexample/configfx"
-	"github.com/preslavmihaylov/fxappexample/httpfx"
-	"github.com/preslavmihaylov/fxappexample/loggerfx"
+	"github.com/mager/caffy-beans/configfx"
+	"github.com/mager/caffy-beans/firestorefx"
+	"github.com/mager/caffy-beans/httpfx"
+	"github.com/mager/caffy-beans/loggerfx"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
 func registerHooks(
 	lifecycle fx.Lifecycle,
-	logger *zap.SugaredLogger, cfg *configfx.Config, mux *mux.Router,
+	logger *zap.SugaredLogger,
+	cfg *configfx.Config,
+	store *firestore.Client,
+	mux *mux.Router,
 ) {
 	lifecycle.Append(
 		fx.Hook{
@@ -24,6 +29,7 @@ func registerHooks(
 				return nil
 			},
 			OnStop: func(context.Context) error {
+				defer store.Close()
 				return logger.Sync()
 			},
 		},
@@ -34,6 +40,7 @@ func registerHooks(
 var Module = fx.Options(
 	configfx.Module,
 	loggerfx.Module,
+	firestorefx.Module,
 	httpfx.Module,
 	fx.Invoke(registerHooks),
 )

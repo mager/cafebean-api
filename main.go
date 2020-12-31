@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/preslavmihaylov/fxappexample/bundlefx"
-	"github.com/preslavmihaylov/fxappexample/httphandler"
+	"github.com/mager/caffy-beans/bundlefx"
+	"github.com/mager/caffy-beans/httphandler"
 	"go.uber.org/fx"
 )
 
