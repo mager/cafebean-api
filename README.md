@@ -4,7 +4,11 @@ _An open-source coffee bean database & API using Go-Fx and Firebase._
 
 ## Local Dev
 
-Clone the repo and run `make dev`.
+Clone the repo and run:
+
+```sh
+make dev
+```
 
 ## Deployment
 
