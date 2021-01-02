@@ -2,7 +2,6 @@ package bundlefx
 
 import (
 	"context"
-	"io"
 	"net/http"
 
 	"cloud.google.com/go/firestore"
@@ -10,7 +9,6 @@ import (
 	"github.com/mager/caffy-beans/configfx"
 	"github.com/mager/caffy-beans/firestorefx"
 	"github.com/mager/caffy-beans/httpfx"
-	"github.com/mager/caffy-beans/jaegerfx"
 	"github.com/mager/caffy-beans/loggerfx"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
@@ -22,7 +20,6 @@ func registerHooks(
 	cfg *configfx.Config,
 	store *firestore.Client,
 	mux *mux.Router,
-	tracingCloser io.Closer,
 ) {
 	lifecycle.Append(
 		fx.Hook{
@@ -33,7 +30,6 @@ func registerHooks(
 			},
 			OnStop: func(context.Context) error {
 				defer store.Close()
-				defer tracingCloser.Close()
 				return logger.Sync()
 			},
 		},
@@ -46,6 +42,5 @@ var Module = fx.Options(
 	loggerfx.Module,
 	firestorefx.Module,
 	httpfx.Module,
-	jaegerfx.Module,
 	fx.Invoke(registerHooks),
 )
