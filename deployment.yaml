@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: caffy-beans-api
+  labels:
+    app: caffy-beans-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: caffy-beans-api
+  template:
+    metadata:
+      labels:
+        app: caffy-beans-api
+    spec:
+      containers:
+        - name: caffy-beans-api
+          image: caffy-beans-api
+          ports:
+            - containerPort: 8080

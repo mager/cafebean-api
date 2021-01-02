@@ -8,8 +8,6 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/gorilla/mux"
-	"github.com/kr/pretty"
-	opentracing "github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 	"google.golang.org/api/iterator"
 	"google.golang.org/genproto/googleapis/type/latlng"
@@ -73,16 +71,14 @@ type RoastersResp struct {
 func (h *Handler) registerRoutes() {
 	h.mux.HandleFunc("/beans", h.getBeans).Methods("GET")
 	h.mux.HandleFunc("/beans", h.addBean).Methods("POST")
-	h.mux.HandleFunc("/roasters", h.roasters)
+	h.mux.HandleFunc("/roasters", h.getRoasters).Methods("GET")
 }
 
 func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
-	tracer := opentracing.GlobalTracer()
-	span := tracer.StartSpan("say-hello")
-	defer span.Finish()
+	var (
+		resp = &BeansResp{}
+	)
 
-	resp := &BeansResp{}
-	pretty.Print(span)
 	// Call Firestore API
 	iter := h.store.Collection("beans").Documents(context.TODO())
 	for {
@@ -156,8 +152,10 @@ func (h *Handler) addBean(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-func (h *Handler) roasters(w http.ResponseWriter, r *http.Request) {
-	resp := &RoastersResp{}
+func (h *Handler) getRoasters(w http.ResponseWriter, r *http.Request) {
+	var (
+		resp = &RoastersResp{}
+	)
 
 	// Call Firestore API
 	iter := h.store.Collection("roasters").Documents(context.TODO())
