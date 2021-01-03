@@ -8,12 +8,8 @@ import (
 // ProvideLogger provides a zap logger
 func ProvideLogger() *zap.SugaredLogger {
 	logger, _ := zap.NewProduction()
-	slogger := logger.Sugar()
-
-	return slogger
+	return logger.Sugar()
 }
 
 // Module provided to fx
-var Module = fx.Options(
-	fx.Provide(ProvideLogger),
-)
+var Module = fx.Provide(ProvideLogger)

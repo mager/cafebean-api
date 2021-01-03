@@ -1,4 +1,4 @@
-package httphandler
+package handler
 
 import (
 	"context"

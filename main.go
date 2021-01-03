@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/mager/caffy-beans/config"
 	"github.com/mager/caffy-beans/db"
-	"github.com/mager/caffy-beans/httphandler"
+	"github.com/mager/caffy-beans/handler"
 	"github.com/mager/caffy-beans/logger"
 	"github.com/mager/caffy-beans/router"
 	"go.uber.org/fx"
@@ -43,9 +43,10 @@ func Register(
 			},
 			OnStop: func(context.Context) error {
 				defer store.Close()
-				return logger.Sync()
+				defer logger.Sync()
+				return nil
 			},
 		},
 	)
-	httphandler.New(router, logger, store)
+	handler.New(router, logger, store)
 }

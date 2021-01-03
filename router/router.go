@@ -22,6 +22,4 @@ func jsonMiddleware(next http.Handler) http.Handler {
 }
 
 // Module provided to fx
-var Module = fx.Options(
-	fx.Provide(ProvideRouter),
-)
+var Module = fx.Provide(ProvideRouter)

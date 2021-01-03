@@ -34,6 +34,4 @@ func ProvideConfig() *Config {
 }
 
 // Module provided to fx
-var Module = fx.Options(
-	fx.Provide(ProvideConfig),
-)
+var Module = fx.Provide(ProvideConfig)

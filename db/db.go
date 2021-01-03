@@ -20,6 +20,4 @@ func ProvideDB() *firestore.Client {
 }
 
 // Module provided to fx
-var Module = fx.Options(
-	fx.Provide(ProvideDB),
-)
+var Module = fx.Provide(ProvideDB)
