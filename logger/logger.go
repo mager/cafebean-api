@@ -1,11 +1,11 @@
-package loggerfx
+package logger
 
 import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
-// ProvideLogger to fx
+// ProvideLogger provides a zap logger
 func ProvideLogger() *zap.SugaredLogger {
 	logger, _ := zap.NewProduction()
 	slogger := logger.Sugar()

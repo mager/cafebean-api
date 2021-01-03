@@ -1,4 +1,4 @@
-package firestorefx
+package db
 
 import (
 	"context"
@@ -8,7 +8,8 @@ import (
 	"go.uber.org/fx"
 )
 
-func ProvideFirestore() *firestore.Client {
+// ProvideDB provides a firestore client
+func ProvideDB() *firestore.Client {
 	projectID := "caffy-beans-api"
 
 	client, err := firestore.NewClient(context.TODO(), projectID)
@@ -20,5 +21,5 @@ func ProvideFirestore() *firestore.Client {
 
 // Module provided to fx
 var Module = fx.Options(
-	fx.Provide(ProvideFirestore),
+	fx.Provide(ProvideDB),
 )

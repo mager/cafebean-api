@@ -1,4 +1,4 @@
-package configfx
+package config
 
 import (
 	"io/ioutil"

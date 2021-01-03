@@ -1,4 +1,4 @@
-package httpfx
+package router
 
 import (
 	"net/http"
@@ -7,7 +7,8 @@ import (
 	"go.uber.org/fx"
 )
 
-func ProvideHTTP() *mux.Router {
+// ProvideRouter provides a gorilla mux router
+func ProvideRouter() *mux.Router {
 	var router = mux.NewRouter()
 	router.Use(jsonMiddleware)
 	return router
@@ -22,5 +23,5 @@ func jsonMiddleware(next http.Handler) http.Handler {
 
 // Module provided to fx
 var Module = fx.Options(
-	fx.Provide(ProvideHTTP),
+	fx.Provide(ProvideRouter),
 )

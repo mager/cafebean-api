@@ -15,14 +15,14 @@ import (
 
 // Handler for http requests
 type Handler struct {
-	mux    *mux.Router
+	router *mux.Router
 	logger *zap.SugaredLogger
 	store  *firestore.Client
 }
 
 // New http handler
-func New(s *mux.Router, logger *zap.SugaredLogger, store *firestore.Client) *Handler {
-	h := Handler{s, logger, store}
+func New(router *mux.Router, logger *zap.SugaredLogger, store *firestore.Client) *Handler {
+	h := Handler{router, logger, store}
 	h.registerRoutes()
 
 	return &h
@@ -69,9 +69,9 @@ type RoastersResp struct {
 
 // RegisterRoutes for all http endpoints
 func (h *Handler) registerRoutes() {
-	h.mux.HandleFunc("/beans", h.getBeans).Methods("GET")
-	h.mux.HandleFunc("/beans", h.addBean).Methods("POST")
-	h.mux.HandleFunc("/roasters", h.getRoasters).Methods("GET")
+	h.router.HandleFunc("/beans", h.getBeans).Methods("GET")
+	h.router.HandleFunc("/beans", h.addBean).Methods("POST")
+	h.router.HandleFunc("/roasters", h.getRoasters).Methods("GET")
 }
 
 func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
