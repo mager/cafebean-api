@@ -15,14 +15,14 @@ import (
 
 // Handler for http requests
 type Handler struct {
-	router *mux.Router
 	logger *zap.SugaredLogger
+	router *mux.Router
 	store  *firestore.Client
 }
 
 // New http handler
-func New(router *mux.Router, logger *zap.SugaredLogger, store *firestore.Client) *Handler {
-	h := Handler{router, logger, store}
+func New(logger *zap.SugaredLogger, router *mux.Router, store *firestore.Client) *Handler {
+	h := Handler{logger, router, store}
 	h.registerRoutes()
 
 	return &h
@@ -30,7 +30,7 @@ func New(router *mux.Router, logger *zap.SugaredLogger, store *firestore.Client)
 
 // Bean represents a coffee bean
 type Bean struct {
-	Flavors []string `firestore:"flavors" json:"flavors" omitempty`
+	Flavors []string `firestore:"flavors" json:"flavors"`
 	Name    string   `firestore:"name" json:"name"`
 	Roaster string   `firestore:"roaster" json:"roaster"`
 	Shade   string   `firestore:"shade" json:"shade"`

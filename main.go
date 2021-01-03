@@ -48,5 +48,5 @@ func Register(
 			},
 		},
 	)
-	handler.New(router, logger, store)
+	handler.New(logger, router, store)
 }
