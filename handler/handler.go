@@ -57,7 +57,7 @@ type RoasterDB struct {
 	Verified bool `firestore:"verified"`
 }
 
-// BeansResp is the response for the beans endpoint
+// BeansResp is the response for the GET /beans endpoint
 type BeansResp struct {
 	Beans []Bean `json:"beans"`
 }
@@ -75,9 +75,7 @@ func (h *Handler) registerRoutes() {
 }
 
 func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
-	var (
-		resp = &BeansResp{}
-	)
+	var resp = &BeansResp{}
 
 	// Call Firestore API
 	iter := h.database.Collection("beans").Documents(context.TODO())
@@ -98,6 +96,7 @@ func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// AddBeanReq is the request body for adding a Bean
 type AddBeanReq struct {
 	Flavors []string `json:"flavors"`
 	Name    string   `json:"name"`
@@ -105,6 +104,7 @@ type AddBeanReq struct {
 	Shade   string   `json:"shade"`
 }
 
+// AddBeanResp is the response from the POST /beans endpoint
 type AddBeanResp struct {
 	ID string `json:"id"`
 }
