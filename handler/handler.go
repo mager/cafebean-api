@@ -15,14 +15,14 @@ import (
 
 // Handler for http requests
 type Handler struct {
-	logger *zap.SugaredLogger
-	router *mux.Router
-	store  *firestore.Client
+	logger   *zap.SugaredLogger
+	router   *mux.Router
+	database *firestore.Client
 }
 
 // New http handler
-func New(logger *zap.SugaredLogger, router *mux.Router, store *firestore.Client) *Handler {
-	h := Handler{logger, router, store}
+func New(logger *zap.SugaredLogger, router *mux.Router, database *firestore.Client) *Handler {
+	h := Handler{logger, router, database}
 	h.registerRoutes()
 
 	return &h
@@ -80,7 +80,7 @@ func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Call Firestore API
-	iter := h.store.Collection("beans").Documents(context.TODO())
+	iter := h.database.Collection("beans").Documents(context.TODO())
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {
@@ -124,7 +124,7 @@ func (h *Handler) addBean(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Make sure roaster exists
-	iter := h.store.Collection("roasters").Where("name", "==", req.Roaster).Documents(ctx)
+	iter := h.database.Collection("roasters").Where("name", "==", req.Roaster).Documents(ctx)
 	for {
 		doc, err := iter.Next()
 		if doc == nil {
@@ -141,7 +141,7 @@ func (h *Handler) addBean(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add the bean
-	doc, _, err := h.store.Collection("beans").Add(ctx, req)
+	doc, _, err := h.database.Collection("beans").Add(ctx, req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -158,7 +158,7 @@ func (h *Handler) getRoasters(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Call Firestore API
-	iter := h.store.Collection("roasters").Documents(context.TODO())
+	iter := h.database.Collection("roasters").Documents(context.TODO())
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {

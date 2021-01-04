@@ -1,4 +1,4 @@
-package db
+package database
 
 import (
 	"context"
@@ -19,5 +19,4 @@ func ProvideDB() *firestore.Client {
 	return client
 }
 
-// Module provided to fx
 var Module = fx.Provide(ProvideDB)

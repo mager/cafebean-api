@@ -11,5 +11,4 @@ func ProvideLogger() *zap.SugaredLogger {
 	return logger.Sugar()
 }
 
-// Module provided to fx
 var Module = fx.Provide(ProvideLogger)

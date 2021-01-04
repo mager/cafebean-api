@@ -7,17 +7,14 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// ApplicationConfig ...
-type ApplicationConfig struct {
+type Config struct {
+	Application `yaml:"application"`
+}
+
+type Application struct {
 	Address string `yaml:"address"`
 }
 
-// Config ...
-type Config struct {
-	ApplicationConfig `yaml:"application"`
-}
-
-// ProvideConfig provides the standard configuration to fx
 func ProvideConfig() *Config {
 	conf := Config{}
 	data, err := ioutil.ReadFile("config/base.yaml")
@@ -33,5 +30,4 @@ func ProvideConfig() *Config {
 	return &conf
 }
 
-// Module provided to fx
 var Module = fx.Provide(ProvideConfig)
