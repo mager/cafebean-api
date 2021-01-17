@@ -17,11 +17,11 @@ import (
 
 func main() {
 	fx.New(
-		fx.Options(
-			config.Module,
-			database.Module,
-			router.Module,
-			logger.Module,
+		fx.Provide(
+			config.Options,
+			database.Options,
+			router.Options,
+			logger.Options,
 		),
 		fx.Invoke(Register),
 	).Run()

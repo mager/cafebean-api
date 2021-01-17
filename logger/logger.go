@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
@@ -11,4 +10,4 @@ func ProvideLogger() *zap.SugaredLogger {
 	return logger.Sugar()
 }
 
-var Module = fx.Provide(ProvideLogger)
+var Options = ProvideLogger
