@@ -30,10 +30,11 @@ func New(logger *zap.SugaredLogger, router *mux.Router, database *firestore.Clie
 
 // Bean represents a coffee bean
 type Bean struct {
-	Flavors []string `firestore:"flavors" json:"flavors"`
-	Name    string   `firestore:"name" json:"name"`
-	Roaster string   `firestore:"roaster" json:"roaster"`
-	Shade   string   `firestore:"shade" json:"shade"`
+	Description string   `firestore:"description" json:"description"`
+	Flavors     []string `firestore:"flavors" json:"flavors"`
+	Name        string   `firestore:"name" json:"name"`
+	Roaster     string   `firestore:"roaster" json:"roaster"`
+	Shade       string   `firestore:"shade" json:"shade"`
 }
 
 // BeanDB represents a Bean in firestore
@@ -98,10 +99,11 @@ func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
 
 // AddBeanReq is the request body for adding a Bean
 type AddBeanReq struct {
-	Flavors []string `json:"flavors"`
-	Name    string   `json:"name"`
-	Roaster string   `json:"roaster"`
-	Shade   string   `json:"shade"`
+	Flavors     []string `json:"flavors"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Roaster     string   `json:"roaster"`
+	Shade       string   `json:"shade"`
 }
 
 // AddBeanResp is the response from the POST /beans endpoint
