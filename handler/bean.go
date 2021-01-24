@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -55,19 +56,25 @@ func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
 	var (
 		resp = &BeanResp{}
 		vars = mux.Vars(r)
+		slug = vars["slug"]
 		ctx  = context.TODO()
 	)
 	// Call Firestore API
-	doc, err := h.database.Collection("beans").Doc(vars["slug"]).Get(ctx)
+	doc, err := h.database.Collection("beans").Doc(slug).Get(ctx)
 	if err != nil {
-		log.Fatalf("Failed to get document: %v", err)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(
+			&ErrorMessage{
+				Message: fmt.Sprintf("Failed to get document: %s", slug),
+			},
+		)
+	} else {
+		var b Bean
+		doc.DataTo(&b)
+		resp.Bean = b
+
+		json.NewEncoder(w).Encode(resp)
 	}
-
-	var b Bean
-	doc.DataTo(&b)
-	resp.Bean = b
-
-	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {

@@ -13,11 +13,16 @@ type Handler struct {
 	database *firestore.Client
 }
 
+// ErrorMessage is a custom error message
+type ErrorMessage struct {
+	Message string `json:"message"`
+}
+
 // RegisterRoutes for all http endpoints
 func (h *Handler) registerRoutes() {
-	h.router.HandleFunc("/bean/{slug}", h.getBean).Methods("GET")
 	h.router.HandleFunc("/beans", h.getBeans).Methods("GET")
 	h.router.HandleFunc("/beans", h.addBean).Methods("POST")
+	h.router.HandleFunc("/beans/{slug}", h.getBean).Methods("GET")
 	h.router.HandleFunc("/roasters", h.getRoasters).Methods("GET")
 }
 
