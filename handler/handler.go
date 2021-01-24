@@ -13,6 +13,14 @@ type Handler struct {
 	database *firestore.Client
 }
 
+// RegisterRoutes for all http endpoints
+func (h *Handler) registerRoutes() {
+	h.router.HandleFunc("/bean/{slug}", h.getBean).Methods("GET")
+	h.router.HandleFunc("/beans", h.getBeans).Methods("GET")
+	h.router.HandleFunc("/beans", h.addBean).Methods("POST")
+	h.router.HandleFunc("/roasters", h.getRoasters).Methods("GET")
+}
+
 // New http handler
 func New(logger *zap.SugaredLogger, router *mux.Router, database *firestore.Client) *Handler {
 	h := Handler{logger, router, database}

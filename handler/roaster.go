@@ -31,13 +31,6 @@ type RoastersResp struct {
 	Roasters []Roaster `json:"roasters"`
 }
 
-// RegisterRoutes for all http endpoints
-func (h *Handler) registerRoutes() {
-	h.router.HandleFunc("/beans", h.getBeans).Methods("GET")
-	h.router.HandleFunc("/beans", h.addBean).Methods("POST")
-	h.router.HandleFunc("/roasters", h.getRoasters).Methods("GET")
-}
-
 func (h *Handler) getRoasters(w http.ResponseWriter, r *http.Request) {
 	var (
 		resp = &RoastersResp{}

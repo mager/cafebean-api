@@ -6,22 +6,30 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"google.golang.org/api/iterator"
 )
 
 // Bean represents a coffee bean
 type Bean struct {
+	Countries   []string `firestore:"countries" json:"countries"`
 	Description string   `firestore:"description" json:"description"`
 	Flavors     []string `firestore:"flavors" json:"flavors"`
 	Name        string   `firestore:"name" json:"name"`
 	Roaster     string   `firestore:"roaster" json:"roaster"`
 	Shade       string   `firestore:"shade" json:"shade"`
 	URL         string   `firestore:"url" json:"url"`
+	Year        int64    `firestore:"year" json:"year"`
 }
 
 // BeanDB represents a Bean in firestore
 type BeanDB struct {
 	Bean
+}
+
+// BeanResp is the response for the GET /bean/{slug} endpoint
+type BeanResp struct {
+	Bean Bean `json:"bean"`
 }
 
 // BeansResp is the response for the GET /beans endpoint
@@ -43,11 +51,33 @@ type AddBeanResp struct {
 	ID string `json:"id"`
 }
 
+func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
+	var (
+		resp = &BeanResp{}
+		vars = mux.Vars(r)
+		ctx  = context.TODO()
+	)
+	// Call Firestore API
+	doc, err := h.database.Collection("beans").Doc(vars["slug"]).Get(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get document: %v", err)
+	}
+
+	var b Bean
+	doc.DataTo(&b)
+	resp.Bean = b
+
+	json.NewEncoder(w).Encode(resp)
+}
+
 func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
-	var resp = &BeansResp{}
+	var (
+		resp = &BeansResp{}
+		ctx  = context.TODO()
+	)
 
 	// Call Firestore API
-	iter := h.database.Collection("beans").Documents(context.TODO())
+	iter := h.database.Collection("beans").Documents(ctx)
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {
@@ -67,10 +97,10 @@ func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) addBean(w http.ResponseWriter, r *http.Request) {
 	var (
-		req  AddBeanReq
-		resp = &AddBeanResp{}
 		ctx  = context.TODO()
 		err  error
+		req  AddBeanReq
+		resp = &AddBeanResp{}
 	)
 
 	err = json.NewDecoder(r.Body).Decode(&req)
