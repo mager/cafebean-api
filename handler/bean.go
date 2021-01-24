@@ -19,6 +19,7 @@ type Bean struct {
 	Name        string   `firestore:"name" json:"name"`
 	Roaster     string   `firestore:"roaster" json:"roaster"`
 	Shade       string   `firestore:"shade" json:"shade"`
+	Slug        string   `firestore:"slug" json:"slug"`
 	URL         string   `firestore:"url" json:"url"`
 	Year        int64    `firestore:"year" json:"year"`
 }
@@ -96,6 +97,7 @@ func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
 
 		var b Bean
 		doc.DataTo(&b)
+		b.Slug = doc.Ref.ID
 		resp.Beans = append(resp.Beans, b)
 	}
 
