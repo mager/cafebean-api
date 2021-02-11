@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 
+	"cloud.google.com/go/firestore"
 	"github.com/gorilla/mux"
 	"google.golang.org/api/iterator"
 )
@@ -37,20 +38,6 @@ type BeanResp struct {
 // BeansResp is the response for the GET /beans endpoint
 type BeansResp struct {
 	Beans []Bean `json:"beans"`
-}
-
-// AddBeanReq is the request body for adding a Bean
-type AddBeanReq struct {
-	Flavors     []string `json:"flavors"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Roaster     string   `json:"roaster"`
-	Shade       string   `json:"shade"`
-}
-
-// AddBeanResp is the response from the POST /beans endpoint
-type AddBeanResp struct {
-	ID string `json:"id"`
 }
 
 func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
@@ -104,6 +91,63 @@ func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// EditBeanReq is the request body for adding a Bean
+// NOTE: Currently you can only update a bean name
+type EditBeanReq struct {
+	Name string `json:"name"`
+}
+
+// EditBeanResp is the response from the POST /beans endpoint
+type EditBeanResp struct {
+	ID string `json:"id"`
+}
+
+func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
+	var (
+		ctx  = context.TODO()
+		vars = mux.Vars(r)
+		slug = vars["slug"]
+		err  error
+		req  EditBeanReq
+		resp = &EditBeanResp{}
+	)
+
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Fetch the bean
+	bean := h.database.Collection("beans").Doc(slug)
+	docsnap, err := bean.Get(ctx)
+	if err != nil {
+		http.Error(w, "invalid bean slug", http.StatusBadRequest)
+		return
+	}
+
+	result, err := bean.Update(ctx, []firestore.Update{{Path: "name", Value: req.Name}})
+	h.logger.Infow("Bean updated", "id", docsnap.Ref.ID, "updated_at", result.UpdateTime)
+
+	w.WriteHeader(http.StatusAccepted)
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+// AddBeanReq is the request body for adding a Bean
+type AddBeanReq struct {
+	Flavors     []string `json:"flavors"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Roaster     string   `json:"roaster"`
+	Shade       string   `json:"shade"`
+}
+
+// AddBeanResp is the response from the POST /beans endpoint
+type AddBeanResp struct {
+	ID string `json:"id"`
+}
+
 func (h *Handler) addBean(w http.ResponseWriter, r *http.Request) {
 	var (
 		ctx  = context.TODO()
@@ -143,6 +187,8 @@ func (h *Handler) addBean(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp.ID = doc.ID
+
+	w.WriteHeader(http.StatusAccepted)
 
 	json.NewEncoder(w).Encode(resp)
 }
