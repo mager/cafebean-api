@@ -6,7 +6,6 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/gorilla/mux"
-	"github.com/mager/cafebean-api/config"
 	"github.com/mager/cafebean-api/database"
 	"github.com/mager/cafebean-api/handler"
 	"github.com/mager/cafebean-api/logger"
@@ -18,7 +17,6 @@ import (
 func main() {
 	fx.New(
 		fx.Provide(
-			config.Options,
 			database.Options,
 			router.Options,
 			logger.Options,
@@ -31,15 +29,14 @@ func main() {
 func Register(
 	lifecycle fx.Lifecycle,
 	database *firestore.Client,
-	cfg *config.Config,
 	logger *zap.SugaredLogger,
 	router *mux.Router,
 ) {
 	lifecycle.Append(
 		fx.Hook{
 			OnStart: func(context.Context) error {
-				logger.Info("Listening on ", cfg.Application.Address)
-				go http.ListenAndServe(cfg.Application.Address, router)
+				logger.Info("Listening on :8080")
+				go http.ListenAndServe(":8080", router)
 				return nil
 			},
 			OnStop: func(context.Context) error {
