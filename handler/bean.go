@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"cloud.google.com/go/firestore"
@@ -40,6 +39,13 @@ type BeansResp struct {
 	Beans []Bean `json:"beans"`
 }
 
+func docToBean(doc *firestore.DocumentSnapshot) Bean {
+	var b Bean
+	doc.DataTo(&b)
+	b.Slug = doc.Ref.ID
+	return b
+}
+
 func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
 	var (
 		resp = &BeanResp{}
@@ -47,7 +53,8 @@ func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
 		slug = vars["slug"]
 		ctx  = context.TODO()
 	)
-	// Call Firestore API
+
+	// Get the bean
 	doc, err := h.database.Collection("beans").Doc(slug).Get(ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -57,9 +64,7 @@ func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
 			},
 		)
 	} else {
-		var b Bean
-		doc.DataTo(&b)
-		resp.Bean = b
+		resp.Bean = docToBean(doc)
 
 		json.NewEncoder(w).Encode(resp)
 	}
@@ -79,13 +84,10 @@ func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		if err != nil {
-			log.Fatalf("Failed to iterate: %v", err)
+			h.logger.Fatalf("Failed to iterate: %v", err)
 		}
 
-		var b Bean
-		doc.DataTo(&b)
-		b.Slug = doc.Ref.ID
-		resp.Beans = append(resp.Beans, b)
+		resp.Beans = append(resp.Beans, docToBean(doc))
 	}
 
 	json.NewEncoder(w).Encode(resp)
@@ -94,12 +96,14 @@ func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
 // EditBeanReq is the request body for adding a Bean
 // NOTE: Currently you can only update a bean name
 type EditBeanReq struct {
-	Name string `json:"name"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	URL         string `json:"url"`
 }
 
 // EditBeanResp is the response from the POST /beans endpoint
 type EditBeanResp struct {
-	ID string `json:"id"`
+	Bean
 }
 
 func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
@@ -126,10 +130,31 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := bean.Update(ctx, []firestore.Update{{Path: "name", Value: req.Name}})
-	h.logger.Infow("Bean updated", "id", docsnap.Ref.ID, "updated_at", result.UpdateTime)
+	// Update the bean
+	result, err := bean.Update(
+		ctx,
+		[]firestore.Update{
+			{Path: "name", Value: req.Name},
+			{Path: "description", Value: req.Description},
+			{Path: "url", Value: req.URL},
+		},
+	)
+	h.logger.Infow(
+		"Bean updated",
+		"id", docsnap.Ref.ID,
+		"updated_at", result.UpdateTime,
+	)
 
 	w.WriteHeader(http.StatusAccepted)
+
+	updated, err := bean.Get(ctx)
+	if err != nil {
+		h.logger.Errorw(
+			"Error fetching bean after updating it",
+			"id", updated.Ref.ID,
+		)
+	}
+	resp.Bean = docToBean(updated)
 
 	json.NewEncoder(w).Encode(resp)
 }
