@@ -6,11 +6,11 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/gorilla/mux"
-	"github.com/mager/caffy-beans/config"
-	"github.com/mager/caffy-beans/database"
-	"github.com/mager/caffy-beans/handler"
-	"github.com/mager/caffy-beans/logger"
-	"github.com/mager/caffy-beans/router"
+	"github.com/mager/cafebean-api/config"
+	"github.com/mager/cafebean-api/database"
+	"github.com/mager/cafebean-api/handler"
+	"github.com/mager/cafebean-api/logger"
+	"github.com/mager/cafebean-api/router"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
@@ -27,6 +27,7 @@ func main() {
 	).Run()
 }
 
+// Register registers all of the lifecycle methods and involkes the handler
 func Register(
 	lifecycle fx.Lifecycle,
 	database *firestore.Client,

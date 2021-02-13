@@ -1,6 +1,6 @@
-module github.com/mager/caffy-beans
+module github.com/mager/cafebean-api
 
-go 1.14
+go 1.15
 
 require (
 	cloud.google.com/go/firestore v1.4.0
