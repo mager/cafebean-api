@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"cloud.google.com/go/firestore"
+	"cloud.google.com/go/pubsub"
 	"github.com/gorilla/mux"
 	"google.golang.org/api/iterator"
 )
@@ -109,12 +111,13 @@ type EditBeanResp struct {
 
 func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 	var (
-		ctx  = context.TODO()
-		vars = mux.Vars(r)
-		slug = vars["slug"]
-		err  error
-		req  EditBeanReq
-		resp = &EditBeanResp{}
+		ctx       = context.TODO()
+		vars      = mux.Vars(r)
+		slug      = vars["slug"]
+		err       error
+		req       EditBeanReq
+		resp      = &EditBeanResp{}
+		userEmail = r.Header.Get("X-User-Email")
 	)
 
 	err = json.NewDecoder(r.Body).Decode(&req)
@@ -145,8 +148,26 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 		"Bean updated",
 		"id", docsnap.Ref.ID,
 		"updated_at", result.UpdateTime,
+		"updated_by", userEmail,
 	)
 
+	// Send event
+	// TODO: Send updated fields
+	t := h.events.Topic("bean")
+	res := t.Publish(ctx, &pubsub.Message{
+		Data: []byte("Bean updated"),
+		Attributes: map[string]string{
+			"id":         docsnap.Ref.ID,
+			"user_email": userEmail,
+		},
+	})
+	msgID, err := res.Get(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	h.logger.Infow("Pubsub message succeeded", "msgId", msgID)
+
+	// Send updated bean response
 	w.WriteHeader(http.StatusAccepted)
 
 	updated, err := bean.Get(ctx)

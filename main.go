@@ -5,8 +5,10 @@ import (
 	"net/http"
 
 	"cloud.google.com/go/firestore"
+	"cloud.google.com/go/pubsub"
 	"github.com/gorilla/mux"
 	"github.com/mager/cafebean-api/database"
+	"github.com/mager/cafebean-api/events"
 	"github.com/mager/cafebean-api/handler"
 	"github.com/mager/cafebean-api/logger"
 	"github.com/mager/cafebean-api/router"
@@ -18,6 +20,7 @@ func main() {
 	fx.New(
 		fx.Provide(
 			database.Options,
+			events.Options,
 			router.Options,
 			logger.Options,
 		),
@@ -29,6 +32,7 @@ func main() {
 func Register(
 	lifecycle fx.Lifecycle,
 	database *firestore.Client,
+	events *pubsub.Client,
 	logger *zap.SugaredLogger,
 	router *mux.Router,
 ) {
@@ -46,5 +50,5 @@ func Register(
 			},
 		},
 	)
-	handler.New(logger, router, database)
+	handler.New(database, events, logger, router)
 }
