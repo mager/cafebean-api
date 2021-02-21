@@ -22,10 +22,14 @@ type ErrorMessage struct {
 
 // RegisterRoutes for all http endpoints
 func (h *Handler) registerRoutes() {
+	// Beans
 	h.router.HandleFunc("/beans", h.getBeans).Methods("GET")
 	h.router.HandleFunc("/beans", h.addBean).Methods("POST")
 	h.router.HandleFunc("/beans/{slug}", h.getBean).Methods("GET")
 	h.router.HandleFunc("/beans/{slug}", h.editBean).Methods("POST")
+
+	// Roasters
+	h.router.HandleFunc("/roasters/{slug}", h.getRoaster).Methods("GET")
 	h.router.HandleFunc("/roasters", h.getRoasters).Methods("GET")
 }
 

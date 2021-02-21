@@ -3,10 +3,14 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
+	"cloud.google.com/go/firestore"
+	"github.com/gorilla/mux"
 	"google.golang.org/api/iterator"
+
 	"google.golang.org/genproto/googleapis/type/latlng"
 )
 
@@ -26,9 +30,45 @@ type RoasterDB struct {
 	Verified bool `firestore:"verified"`
 }
 
-// RoastersResp is the response for the roasters endpoint
+// RoasterResp is the response for the GET /roaster/{slug} endpoint
+type RoasterResp struct {
+	Roaster Roaster `json:"roaster"`
+}
+
+// RoastersResp is the response for the GET /roasters endpoint
 type RoastersResp struct {
 	Roasters []Roaster `json:"roasters"`
+}
+
+func docToRoaster(doc *firestore.DocumentSnapshot) Roaster {
+	var r Roaster
+	doc.DataTo(&r)
+	r.Slug = doc.Ref.ID
+	return r
+}
+
+func (h *Handler) getRoaster(w http.ResponseWriter, r *http.Request) {
+	var (
+		resp = &RoasterResp{}
+		vars = mux.Vars(r)
+		slug = vars["slug"]
+		ctx  = context.TODO()
+	)
+
+	// Get the bean
+	doc, err := h.database.Collection("roasters").Doc(slug).Get(ctx)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(
+			&ErrorMessage{
+				Message: fmt.Sprintf("Failed to get document: %s", slug),
+			},
+		)
+	} else {
+		resp.Roaster = docToRoaster(doc)
+
+		json.NewEncoder(w).Encode(resp)
+	}
 }
 
 func (h *Handler) getRoasters(w http.ResponseWriter, r *http.Request) {
