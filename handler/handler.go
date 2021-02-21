@@ -2,15 +2,17 @@ package handler
 
 import (
 	"cloud.google.com/go/firestore"
+	"cloud.google.com/go/pubsub"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
 
 // Handler for http requests
 type Handler struct {
+	database *firestore.Client
+	events   *pubsub.Client
 	logger   *zap.SugaredLogger
 	router   *mux.Router
-	database *firestore.Client
 }
 
 // ErrorMessage is a custom error message
@@ -28,8 +30,13 @@ func (h *Handler) registerRoutes() {
 }
 
 // New http handler
-func New(logger *zap.SugaredLogger, router *mux.Router, database *firestore.Client) *Handler {
-	h := Handler{logger, router, database}
+func New(
+	database *firestore.Client,
+	events *pubsub.Client,
+	logger *zap.SugaredLogger,
+	router *mux.Router,
+) *Handler {
+	h := Handler{database, events, logger, router}
 	h.registerRoutes()
 
 	return &h
