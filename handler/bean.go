@@ -96,9 +96,10 @@ func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
 // EditBeanReq is the request body for adding a Bean
 // NOTE: Currently you can only update a bean name
 type EditBeanReq struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	URL         string `json:"url"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	URL         string   `json:"url"`
+	Flavors     []string `json:"flavors"`
 }
 
 // EditBeanResp is the response from the POST /beans endpoint
@@ -137,6 +138,7 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 			{Path: "name", Value: req.Name},
 			{Path: "description", Value: req.Description},
 			{Path: "url", Value: req.URL},
+			{Path: "flavors", Value: req.Flavors},
 		},
 	)
 	h.logger.Infow(
