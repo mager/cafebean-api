@@ -138,10 +138,10 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 	result, err := bean.Update(
 		ctx,
 		[]firestore.Update{
-			{Path: "name", Value: req.Name},
-			{Path: "description", Value: req.Description},
-			{Path: "url", Value: req.URL},
 			{Path: "flavors", Value: req.Flavors},
+			{Path: "description", Value: req.Description},
+			{Path: "name", Value: req.Name},
+			{Path: "url", Value: req.URL},
 		},
 	)
 	h.logger.Infow(

@@ -21,6 +21,7 @@ type Roaster struct {
 	Logo     string         `firestore:"logo" json:"logo"`
 	Name     string         `firestore:"name" json:"name"`
 	Slug     string         `firestore:"slug" json:"slug"`
+	Twitter  string         `firestore:"twitter" json:"twitter"`
 	URL      string         `firestore:"url" json:"url"`
 }
 
