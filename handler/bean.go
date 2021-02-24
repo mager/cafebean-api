@@ -13,17 +13,22 @@ import (
 	"google.golang.org/api/iterator"
 )
 
+type RoasterMap struct {
+	Name string `firestore:"name" json:"name"`
+	Slug string `firestore:"slug" json:"slug"`
+}
+
 // Bean represents a coffee bean
 type Bean struct {
-	Countries   []string `firestore:"countries" json:"countries"`
-	Description string   `firestore:"description" json:"description"`
-	Flavors     []string `firestore:"flavors" json:"flavors"`
-	Name        string   `firestore:"name" json:"name"`
-	Roaster     string   `firestore:"roaster" json:"roaster"`
-	Shade       string   `firestore:"shade" json:"shade"`
-	Slug        string   `firestore:"slug" json:"slug"`
-	URL         string   `firestore:"url" json:"url"`
-	Year        int64    `firestore:"year" json:"year"`
+	Countries   []string   `firestore:"countries" json:"countries"`
+	Description string     `firestore:"description" json:"description"`
+	Flavors     []string   `firestore:"flavors" json:"flavors"`
+	Name        string     `firestore:"name" json:"name"`
+	Roaster     RoasterMap `firestore:"roaster" json:"roaster"`
+	Shade       string     `firestore:"shade" json:"shade"`
+	Slug        string     `firestore:"slug" json:"slug"`
+	URL         string     `firestore:"url" json:"url"`
+	Year        int64      `firestore:"year" json:"year"`
 }
 
 // BeanDB represents a Bean in firestore
