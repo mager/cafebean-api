@@ -13,6 +13,7 @@ import (
 	"google.golang.org/api/iterator"
 )
 
+// RoasterMap represents the roaster
 type RoasterMap struct {
 	Name string `firestore:"name" json:"name"`
 	Slug string `firestore:"slug" json:"slug"`
@@ -109,7 +110,7 @@ type EditBeanReq struct {
 	Flavors     []string `json:"flavors"`
 }
 
-// EditBeanResp is the response from the POST /beans endpoint
+// EditBeanResp is the response from the POST /beans/{slug} endpoint
 type EditBeanResp struct {
 	Bean
 }

@@ -29,8 +29,9 @@ func (h *Handler) registerRoutes() {
 	h.router.HandleFunc("/beans/{slug}", h.editBean).Methods("POST")
 
 	// Roasters
-	h.router.HandleFunc("/roasters/{slug}", h.getRoaster).Methods("GET")
 	h.router.HandleFunc("/roasters", h.getRoasters).Methods("GET")
+	h.router.HandleFunc("/roasters/{slug}", h.getRoaster).Methods("GET")
+	h.router.HandleFunc("/roasters/{slug}", h.editRoaster).Methods("POST")
 }
 
 // New http handler
