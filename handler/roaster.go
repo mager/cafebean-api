@@ -36,6 +36,7 @@ type RoasterDB struct {
 // RoasterResp is the response for the GET /roaster/{slug} endpoint
 type RoasterResp struct {
 	Roaster Roaster `json:"roaster"`
+	Beans   []Bean  `json:"beans"`
 }
 
 // RoastersResp is the response for the GET /roasters endpoint
@@ -58,7 +59,7 @@ func (h *Handler) getRoaster(w http.ResponseWriter, r *http.Request) {
 		ctx  = context.TODO()
 	)
 
-	// Get the bean
+	// Get the roaster
 	doc, err := h.database.Collection("roasters").Doc(slug).Get(ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -69,6 +70,22 @@ func (h *Handler) getRoaster(w http.ResponseWriter, r *http.Request) {
 		)
 	} else {
 		resp.Roaster = docToRoaster(doc)
+
+		// Get the beans for that roaster
+		iter := h.database.Collection("beans").Where("roaster.slug", "==", resp.Roaster.Slug).Documents(ctx)
+		for {
+			doc, err := iter.Next()
+			if doc == nil {
+				break
+			}
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			resp.Beans = append(resp.Beans, docToBean(doc))
+		}
 
 		json.NewEncoder(w).Encode(resp)
 	}
