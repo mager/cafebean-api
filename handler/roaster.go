@@ -44,6 +44,11 @@ type RoastersResp struct {
 	Roasters []Roaster `json:"roasters"`
 }
 
+// RoastersListResp returns a list of unique roasters
+type RoastersListResp struct {
+	Roasters []RoasterMap `json:"roasters"`
+}
+
 func docToRoaster(doc *firestore.DocumentSnapshot) Roaster {
 	var r Roaster
 	doc.DataTo(&r)
@@ -109,6 +114,33 @@ func (h *Handler) getRoasters(w http.ResponseWriter, r *http.Request) {
 
 		var r Roaster
 		doc.DataTo(&r)
+
+		resp.Roasters = append(resp.Roasters, r)
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (h *Handler) getRoastersList(w http.ResponseWriter, r *http.Request) {
+	var (
+		resp = &RoastersListResp{}
+	)
+
+	// Call Firestore API
+	iter := h.database.Collection("roasters").Documents(context.TODO())
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Fatalf("Failed to iterate: %v", err)
+		}
+
+		var r RoasterMap
+		doc.DataTo(&r)
+
+		// Sort
 
 		resp.Roasters = append(resp.Roasters, r)
 	}
