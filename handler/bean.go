@@ -50,7 +50,7 @@ type BeansResp struct {
 func docToBean(doc *firestore.DocumentSnapshot) Bean {
 	var b Bean
 	doc.DataTo(&b)
-	b.Slug = doc.Ref.ID
+	fmt.Println(b.Slug)
 	return b
 }
 
@@ -61,21 +61,27 @@ func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
 		slug = vars["slug"]
 		ctx  = context.TODO()
 	)
-
+	h.logger.Info(slug)
 	// Get the bean
-	doc, err := h.database.Collection("beans").Doc(slug).Get(ctx)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(
-			&ErrorMessage{
-				Message: fmt.Sprintf("Failed to get document: %s", slug),
-			},
-		)
-	} else {
+	iter := h.database.Collection("beans").Where("slug", "==", slug).Documents(ctx)
+	for {
+		doc, err := iter.Next()
+		if doc == nil {
+			http.Error(w, "invalid bean", http.StatusBadRequest)
+			return
+		}
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
 		resp.Bean = docToBean(doc)
 
-		json.NewEncoder(w).Encode(resp)
+		break
 	}
+
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
@@ -190,11 +196,7 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 
 // AddBeanReq is the request body for adding a Bean
 type AddBeanReq struct {
-	Flavors     []string `json:"flavors"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Roaster     string   `json:"roaster"`
-	Shade       string   `json:"shade"`
+	Bean
 }
 
 // AddBeanResp is the response from the POST /beans endpoint
@@ -217,7 +219,7 @@ func (h *Handler) addBean(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Make sure roaster exists
-	iter := h.database.Collection("roasters").Where("name", "==", req.Roaster).Documents(ctx)
+	iter := h.database.Collection("roasters").Where("name", "==", req.Roaster.Name).Documents(ctx)
 	for {
 		doc, err := iter.Next()
 		if doc == nil {

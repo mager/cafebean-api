@@ -140,8 +140,6 @@ func (h *Handler) getRoastersList(w http.ResponseWriter, r *http.Request) {
 		var r RoasterMap
 		doc.DataTo(&r)
 
-		// Sort
-
 		resp.Roasters = append(resp.Roasters, r)
 	}
 
