@@ -61,7 +61,7 @@ func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
 		slug = vars["slug"]
 		ctx  = context.TODO()
 	)
-	h.logger.Info(slug)
+
 	// Get the bean
 	iter := h.database.Collection("beans").Where("slug", "==", slug).Documents(ctx)
 	for {
@@ -110,10 +110,13 @@ func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
 // EditBeanReq is the request body for adding a Bean
 // NOTE: Currently you can only update a bean name
 type EditBeanReq struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	URL         string   `json:"url"`
-	Flavors     []string `json:"flavors"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	Flavors     []string   `json:"flavors"`
+	Roaster     RoasterMap `json:"roaster"`
+	Shade       string     `json:"shade"`
+	Slug        string     `json:"slug"`
+	URL         string     `json:"url"`
 }
 
 // EditBeanResp is the response from the POST /beans/{slug} endpoint
@@ -124,6 +127,7 @@ type EditBeanResp struct {
 func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 	var (
 		ctx       = context.TODO()
+		docID     string
 		vars      = mux.Vars(r)
 		slug      = vars["slug"]
 		err       error
@@ -139,9 +143,24 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch the bean
-	bean := h.database.Collection("beans").Doc(slug)
+	q := h.database.Collection("beans").Where("slug", "==", slug)
+	iter := q.Documents(ctx)
+	defer iter.Stop()
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			// TODO: Handle error.
+		}
+		docID = doc.Ref.ID
+	}
+
+	bean := h.database.Collection("beans").Doc(docID)
 	docsnap, err := bean.Get(ctx)
 	if err != nil {
+		h.logger.Error(err)
 		http.Error(w, "invalid bean slug", http.StatusBadRequest)
 		return
 	}
@@ -153,6 +172,9 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 			{Path: "flavors", Value: req.Flavors},
 			{Path: "description", Value: req.Description},
 			{Path: "name", Value: req.Name},
+			{Path: "roaster.name", Value: req.Roaster.Name},
+			{Path: "roaster.slug", Value: req.Roaster.Slug},
+			{Path: "slug", Value: req.Slug},
 			{Path: "url", Value: req.URL},
 		},
 	)
