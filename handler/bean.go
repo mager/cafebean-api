@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -50,7 +49,6 @@ type BeansResp struct {
 func docToBean(doc *firestore.DocumentSnapshot) Bean {
 	var b Bean
 	doc.DataTo(&b)
-	fmt.Println(b.Slug)
 	return b
 }
 
