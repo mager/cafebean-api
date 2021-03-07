@@ -111,13 +111,7 @@ func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
 // EditBeanReq is the request body for adding a Bean
 // NOTE: Currently you can only update a bean name
 type EditBeanReq struct {
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	Flavors     []string   `json:"flavors"`
-	Roaster     RoasterMap `json:"roaster"`
-	Shade       string     `json:"shade"`
-	Slug        string     `json:"slug"`
-	URL         string     `json:"url"`
+	Bean
 }
 
 // EditBeanResp is the response from the POST /beans/{slug} endpoint
@@ -170,6 +164,7 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 	result, err := bean.Update(
 		ctx,
 		[]firestore.Update{
+			{Path: "countries", Value: req.Countries},
 			{Path: "flavors", Value: req.Flavors},
 			{Path: "description", Value: req.Description},
 			{Path: "name", Value: req.Name},
