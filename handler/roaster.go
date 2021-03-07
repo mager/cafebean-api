@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -52,7 +51,6 @@ type RoastersListResp struct {
 func docToRoaster(doc *firestore.DocumentSnapshot) Roaster {
 	var r Roaster
 	doc.DataTo(&r)
-	r.Slug = doc.Ref.ID
 	return r
 }
 
@@ -65,35 +63,41 @@ func (h *Handler) getRoaster(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Get the roaster
-	doc, err := h.database.Collection("roasters").Doc(slug).Get(ctx)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(
-			&ErrorMessage{
-				Message: fmt.Sprintf("Failed to get document: %s", slug),
-			},
-		)
-	} else {
-		resp.Roaster = docToRoaster(doc)
-
-		// Get the beans for that roaster
-		iter := h.database.Collection("beans").Where("roaster.slug", "==", resp.Roaster.Slug).Documents(ctx)
-		for {
-			doc, err := iter.Next()
-			if doc == nil {
-				break
-			}
-
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-
-			resp.Beans = append(resp.Beans, docToBean(doc))
+	roasterIter := h.database.Collection("roasters").Where("slug", "==", slug).Documents(ctx)
+	for {
+		doc, err := roasterIter.Next()
+		if doc == nil {
+			http.Error(w, "invalid roaster", http.StatusBadRequest)
+			return
 		}
 
-		json.NewEncoder(w).Encode(resp)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		resp.Roaster = docToRoaster(doc)
+
+		break
 	}
+
+	// Get the beans for that roaster
+	beansIter := h.database.Collection("beans").Where("roaster.slug", "==", resp.Roaster.Slug).Documents(ctx)
+	for {
+		doc, err := beansIter.Next()
+		if doc == nil {
+			break
+		}
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		resp.Beans = append(resp.Beans, docToBean(doc))
+	}
+
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *Handler) getRoasters(w http.ResponseWriter, r *http.Request) {
@@ -150,7 +154,10 @@ func (h *Handler) getRoastersList(w http.ResponseWriter, r *http.Request) {
 type EditRoasterReq struct {
 	City      string `firestore:"city" json:"city"`
 	Instagram string `firestore:"instagram" json:"instagram"`
+	Location  string `firestore:"location" json:"location"`
+	Logo      string `firestore:"logo" json:"logo"`
 	Name      string `firestore:"name" json:"name"`
+	Slug      string `firestore:"slug" json:"slug"`
 	Twitter   string `firestore:"twitter" json:"twitter"`
 	URL       string `firestore:"url" json:"url"`
 }
@@ -191,7 +198,10 @@ func (h *Handler) editRoaster(w http.ResponseWriter, r *http.Request) {
 		[]firestore.Update{
 			{Path: "city", Value: req.City},
 			{Path: "instagram", Value: req.Instagram},
+			{Path: "location", Value: req.Location},
+			{Path: "logo", Value: req.Logo},
 			{Path: "name", Value: req.Name},
+			{Path: "slug", Value: req.Slug},
 			{Path: "twitter", Value: req.Twitter},
 			{Path: "url", Value: req.URL},
 		},
