@@ -49,6 +49,9 @@ type BeansResp struct {
 func docToBean(doc *firestore.DocumentSnapshot) Bean {
 	var b Bean
 	doc.DataTo(&b)
+	if b.Countries == nil {
+		b.Countries = []string{}
+	}
 	return b
 }
 
