@@ -30,6 +30,7 @@ func (h *Handler) registerRoutes() {
 
 	// Roasters
 	h.router.HandleFunc("/roasters", h.getRoasters).Methods("GET")
+	h.router.HandleFunc("/roasters", h.addRoaster).Methods("POST")
 	h.router.HandleFunc("/roasters/{slug}", h.getRoaster).Methods("GET")
 	h.router.HandleFunc("/roasters/{slug}", h.editRoaster).Methods("POST")
 	h.router.HandleFunc("/roasters_list", h.getRoastersList).Methods("GET")

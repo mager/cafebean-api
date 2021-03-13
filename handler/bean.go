@@ -224,10 +224,11 @@ type AddBeanResp struct {
 
 func (h *Handler) addBean(w http.ResponseWriter, r *http.Request) {
 	var (
-		ctx  = context.TODO()
-		err  error
-		req  AddBeanReq
-		resp = &AddBeanResp{}
+		ctx       = context.TODO()
+		err       error
+		req       AddBeanReq
+		resp      = &AddBeanResp{}
+		userEmail = r.Header.Get("X-User-Email")
 	)
 
 	err = json.NewDecoder(r.Body).Decode(&req)
@@ -259,6 +260,11 @@ func (h *Handler) addBean(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	h.logger.Infow(
+		"Bean added",
+		"id", doc.ID,
+		"updated_by", userEmail,
+	)
 
 	resp.ID = doc.ID
 
