@@ -24,6 +24,7 @@ type Bean struct {
 	Description string     `firestore:"description" json:"description"`
 	Flavors     []string   `firestore:"flavors" json:"flavors"`
 	Name        string     `firestore:"name" json:"name"`
+	Photo       string     `firestore:"photo" json:"photo"`
 	Roaster     RoasterMap `firestore:"roaster" json:"roaster"`
 	Shade       string     `firestore:"shade" json:"shade"`
 	Slug        string     `firestore:"slug" json:"slug"`
@@ -168,6 +169,7 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 			{Path: "flavors", Value: req.Flavors},
 			{Path: "description", Value: req.Description},
 			{Path: "name", Value: req.Name},
+			{Path: "photo", Value: req.Photo},
 			{Path: "roaster.name", Value: req.Roaster.Name},
 			{Path: "roaster.slug", Value: req.Roaster.Slug},
 			{Path: "slug", Value: req.Slug},
