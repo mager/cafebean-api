@@ -226,6 +226,7 @@ type EditRoasterResp struct {
 func (h *Handler) editRoaster(w http.ResponseWriter, r *http.Request) {
 	var (
 		ctx       = context.TODO()
+		docID     string
 		vars      = mux.Vars(r)
 		slug      = vars["slug"]
 		err       error
@@ -241,7 +242,21 @@ func (h *Handler) editRoaster(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch the roaster
-	roaster := h.database.Collection("roasters").Doc(slug)
+	q := h.database.Collection("roasters").Where("slug", "==", slug)
+	roasterIter := q.Documents(ctx)
+	defer roasterIter.Stop()
+	for {
+		doc, err := roasterIter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			// TODO: Handle error.
+		}
+		docID = doc.Ref.ID
+	}
+
+	roaster := h.database.Collection("roasters").Doc(docID)
 	docsnap, err := roaster.Get(ctx)
 	if err != nil {
 		http.Error(w, "invalid roaster slug", http.StatusBadRequest)
