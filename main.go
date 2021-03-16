@@ -4,9 +4,11 @@ import (
 	"context"
 	"net/http"
 
+	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/firestore"
 	"cloud.google.com/go/pubsub"
 	"github.com/gorilla/mux"
+	bq "github.com/mager/cafebean-api/bigquery"
 	"github.com/mager/cafebean-api/database"
 	"github.com/mager/cafebean-api/events"
 	"github.com/mager/cafebean-api/handler"
@@ -19,6 +21,7 @@ import (
 func main() {
 	fx.New(
 		fx.Provide(
+			bq.Options,
 			database.Options,
 			events.Options,
 			router.Options,
@@ -31,6 +34,7 @@ func main() {
 // Register registers all of the lifecycle methods and involkes the handler
 func Register(
 	lifecycle fx.Lifecycle,
+	bq *bigquery.Client,
 	database *firestore.Client,
 	events *pubsub.Client,
 	logger *zap.SugaredLogger,
@@ -50,5 +54,5 @@ func Register(
 			},
 		},
 	)
-	handler.New(database, events, logger, router)
+	handler.New(bq, database, events, logger, router)
 }

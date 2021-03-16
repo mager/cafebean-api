@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/firestore"
 	"cloud.google.com/go/pubsub"
 	"github.com/gorilla/mux"
@@ -9,6 +10,7 @@ import (
 
 // Handler for http requests
 type Handler struct {
+	bq       *bigquery.Client
 	database *firestore.Client
 	events   *pubsub.Client
 	logger   *zap.SugaredLogger
@@ -41,12 +43,13 @@ func (h *Handler) registerRoutes() {
 
 // New http handler
 func New(
+	bq *bigquery.Client,
 	database *firestore.Client,
 	events *pubsub.Client,
 	logger *zap.SugaredLogger,
 	router *mux.Router,
 ) *Handler {
-	h := Handler{database, events, logger, router}
+	h := Handler{bq, database, events, logger, router}
 	h.registerRoutes()
 
 	return &h

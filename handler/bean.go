@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"cloud.google.com/go/pubsub"
@@ -37,6 +39,31 @@ type BeanDB struct {
 	Bean
 }
 
+// BeanBQ represents a coffee bean
+type BeanBQ struct {
+	Countries   string
+	Description string
+	Flavors     string
+	Name        string
+	Photo       string
+	Roaster     RoasterMap
+	Shade       string
+	Slug        string
+	URL         string
+	Year        int64
+}
+
+type BeanBQItem struct {
+	Bean      BeanBQ
+	UpdatedBy string
+	UpdatedAt string
+}
+
+// BeanReq is the request body for adding or updating a Bean
+type BeanReq struct {
+	Bean
+}
+
 // BeanResp is the response for the GET /bean/{slug} endpoint
 type BeanResp struct {
 	Bean Bean `json:"bean"`
@@ -54,6 +81,35 @@ func docToBean(doc *firestore.DocumentSnapshot) Bean {
 		b.Countries = []string{}
 	}
 	return b
+}
+
+// recordChange posts a changelog event to BigQuery
+func (h *Handler) recordChange(ctx context.Context, req BeanReq, userEmail string) {
+	dataset := h.bq.DatasetInProject("cafebean", "bean")
+	table := dataset.Table("changelog")
+
+	u := table.Inserter()
+	items := []*BeanBQItem{
+		{
+			Bean: BeanBQ{
+				Countries:   strings.Join(req.Countries, ", "),
+				Description: req.Description,
+				Flavors:     strings.Join(req.Flavors, ", "),
+				Name:        req.Name,
+				Photo:       req.Photo,
+				Roaster:     req.Roaster,
+				Shade:       req.Shade,
+				Slug:        req.Slug,
+				Year:        req.Year,
+				URL:         req.URL,
+			},
+			UpdatedBy: userEmail,
+			UpdatedAt: time.Now().Format(time.RFC3339),
+		},
+	}
+	if err := u.Put(ctx, items); err != nil {
+		h.logger.Error(err)
+	}
 }
 
 func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
@@ -109,12 +165,6 @@ func (h *Handler) getBeans(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-// EditBeanReq is the request body for adding a Bean
-// NOTE: Currently you can only update a bean name
-type EditBeanReq struct {
-	Bean
-}
-
 // EditBeanResp is the response from the POST /beans/{slug} endpoint
 type EditBeanResp struct {
 	Bean
@@ -127,7 +177,7 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 		vars      = mux.Vars(r)
 		slug      = vars["slug"]
 		err       error
-		req       EditBeanReq
+		req       BeanReq
 		resp      = &EditBeanResp{}
 		userEmail = r.Header.Get("X-User-Email")
 	)
@@ -162,7 +212,7 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update the bean
-	result, err := bean.Update(
+	result, _ := bean.Update(
 		ctx,
 		[]firestore.Update{
 			{Path: "countries", Value: req.Countries},
@@ -199,6 +249,9 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 	}
 	h.logger.Infow("Pubsub message succeeded", "msgId", msgID)
 
+	// Publish an entry in BigQuery
+	h.recordChange(ctx, req, userEmail)
+
 	// Send updated bean response
 	w.WriteHeader(http.StatusAccepted)
 
@@ -228,7 +281,7 @@ func (h *Handler) addBean(w http.ResponseWriter, r *http.Request) {
 	var (
 		ctx       = context.TODO()
 		err       error
-		req       AddBeanReq
+		req       BeanReq
 		resp      = &AddBeanResp{}
 		userEmail = r.Header.Get("X-User-Email")
 	)
@@ -269,6 +322,9 @@ func (h *Handler) addBean(w http.ResponseWriter, r *http.Request) {
 	)
 
 	resp.ID = doc.ID
+
+	// Publish an entry in BigQuery
+	h.recordChange(ctx, req, userEmail)
 
 	w.WriteHeader(http.StatusAccepted)
 
