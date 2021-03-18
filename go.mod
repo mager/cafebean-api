@@ -7,10 +7,9 @@ require (
 	cloud.google.com/go/firestore v1.4.0
 	cloud.google.com/go/pubsub v1.3.1
 	github.com/gorilla/mux v1.8.0
-	github.com/kr/pretty v0.1.0
+	github.com/honeycombio/beeline-go v0.11.1
 	github.com/kr/text v0.2.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
-	github.com/stretchr/testify v1.6.1 // indirect
 	go.uber.org/fx v1.11.0
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.14.1
