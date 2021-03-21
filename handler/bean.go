@@ -83,8 +83,8 @@ func docToBean(doc *firestore.DocumentSnapshot) Bean {
 	return b
 }
 
-// recordChange posts a changelog event to BigQuery
-func (h *Handler) recordChange(ctx context.Context, req BeanReq, userEmail string) {
+// recordBeanChange posts a changelog event to BigQuery
+func (h *Handler) recordBeanChange(ctx context.Context, req BeanReq, userEmail string) {
 	dataset := h.bq.DatasetInProject("cafebean", "bean")
 	table := dataset.Table("changelog")
 
@@ -250,7 +250,7 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 	h.logger.Infow("Pubsub message succeeded", "msgId", msgID)
 
 	// Publish an entry in BigQuery
-	h.recordChange(ctx, req, userEmail)
+	h.recordBeanChange(ctx, req, userEmail)
 
 	// Send updated bean response
 	w.WriteHeader(http.StatusAccepted)
@@ -324,7 +324,7 @@ func (h *Handler) addBean(w http.ResponseWriter, r *http.Request) {
 	resp.ID = doc.ID
 
 	// Publish an entry in BigQuery
-	h.recordChange(ctx, req, userEmail)
+	h.recordBeanChange(ctx, req, userEmail)
 
 	w.WriteHeader(http.StatusAccepted)
 

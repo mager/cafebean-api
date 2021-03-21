@@ -3,11 +3,12 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"cloud.google.com/go/firestore"
-	"cloud.google.com/go/pubsub"
 	"github.com/gorilla/mux"
 	"google.golang.org/api/iterator"
 
@@ -32,6 +33,29 @@ type RoasterDB struct {
 	Verified bool `firestore:"verified"`
 }
 
+// RoasterBQ represents a coffee roaster
+type RoasterBQ struct {
+	City      string
+	Instagram string
+	Location  string
+	Logo      string
+	Name      string
+	Slug      string
+	Twitter   string
+	URL       string
+}
+
+type RoasterBQItem struct {
+	Roaster   RoasterBQ
+	UpdatedBy string
+	UpdatedAt string
+}
+
+// RoasterReq is the request body for adding and updating a Roaster
+type RoasterReq struct {
+	Roaster
+}
+
 // RoasterResp is the response for the GET /roaster/{slug} endpoint
 type RoasterResp struct {
 	Roaster Roaster `json:"roaster"`
@@ -52,6 +76,33 @@ func docToRoaster(doc *firestore.DocumentSnapshot) Roaster {
 	var r Roaster
 	doc.DataTo(&r)
 	return r
+}
+
+// recordRoasterChange posts a changelog event to BigQuery
+func (h *Handler) recordRoasterChange(ctx context.Context, req RoasterReq, userEmail string) {
+	dataset := h.bq.DatasetInProject("cafebean", "roaster")
+	table := dataset.Table("changelog")
+
+	u := table.Inserter()
+	items := []*RoasterBQItem{
+		{
+			Roaster: RoasterBQ{
+				City:      req.City,
+				Instagram: req.Instagram,
+				Location:  fmt.Sprintf("POINT(%f %f)", req.Location.Longitude, req.Location.Latitude),
+				Logo:      req.Logo,
+				Name:      req.Name,
+				Slug:      req.Slug,
+				URL:       req.URL,
+				Twitter:   req.Twitter,
+			},
+			UpdatedBy: userEmail,
+			UpdatedAt: time.Now().Format(time.RFC3339),
+		},
+	}
+	if err := u.Put(ctx, items); err != nil {
+		h.logger.Error(err)
+	}
 }
 
 func (h *Handler) getRoaster(w http.ResponseWriter, r *http.Request) {
@@ -150,11 +201,6 @@ func (h *Handler) getRoastersList(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-// AddRoasterReq is the request body for adding a Roaster
-type AddRoasterReq struct {
-	Roaster
-}
-
 // AddRoasterResp is the response from the POST /roasters/{slug} endpoint
 type AddRoasterResp struct {
 	ID string `json:"id"`
@@ -164,7 +210,7 @@ func (h *Handler) addRoaster(w http.ResponseWriter, r *http.Request) {
 	var (
 		ctx       = context.TODO()
 		err       error
-		req       AddRoasterReq
+		req       RoasterReq
 		resp      = &AddRoasterResp{}
 		userEmail = r.Header.Get("X-User-Email")
 	)
@@ -205,17 +251,15 @@ func (h *Handler) addRoaster(w http.ResponseWriter, r *http.Request) {
 		"updated_by", userEmail,
 	)
 
+	// Publish an entry in BigQuery
+	h.recordRoasterChange(ctx, req, userEmail)
+
 	// Send updated roaster response
 	w.WriteHeader(http.StatusAccepted)
 
 	resp.ID = doc.ID
 
 	json.NewEncoder(w).Encode(resp)
-}
-
-// EditRoasterReq is the request body for editing a Roaster
-type EditRoasterReq struct {
-	Roaster
 }
 
 // EditRoasterResp is the response from the POST /roasters/{slug} endpoint
@@ -230,7 +274,7 @@ func (h *Handler) editRoaster(w http.ResponseWriter, r *http.Request) {
 		vars      = mux.Vars(r)
 		slug      = vars["slug"]
 		err       error
-		req       EditRoasterReq
+		req       RoasterReq
 		resp      = &EditRoasterResp{}
 		userEmail = r.Header.Get("X-User-Email")
 	)
@@ -284,21 +328,8 @@ func (h *Handler) editRoaster(w http.ResponseWriter, r *http.Request) {
 		"updated_by", userEmail,
 	)
 
-	// // Send event
-	// // TODO: Send updated fields
-	t := h.events.Topic("roaster")
-	res := t.Publish(ctx, &pubsub.Message{
-		Data: []byte("Roaster updated"),
-		Attributes: map[string]string{
-			"id":         docsnap.Ref.ID,
-			"user_email": userEmail,
-		},
-	})
-	msgID, err := res.Get(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	h.logger.Infow("Pubsub message succeeded", "msgId", msgID)
+	// Publish an entry in BigQuery
+	h.recordRoasterChange(ctx, req, userEmail)
 
 	// Send updated roaster response
 	w.WriteHeader(http.StatusAccepted)
