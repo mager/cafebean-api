@@ -3,13 +3,13 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
-	"cloud.google.com/go/pubsub"
+	"github.com/bwmarrin/discordgo"
 	"github.com/gorilla/mux"
 	"google.golang.org/api/iterator"
 )
@@ -233,24 +233,46 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 		"updated_by", userEmail,
 	)
 
-	// Send event
-	// TODO: Send updated fields
-	t := h.events.Topic("bean")
-	res := t.Publish(ctx, &pubsub.Message{
-		Data: []byte("Bean updated"),
-		Attributes: map[string]string{
-			"id":         docsnap.Ref.ID,
-			"user_email": userEmail,
-		},
-	})
-	msgID, err := res.Get(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	h.logger.Infow("Pubsub message succeeded", "msgId", msgID)
-
 	// Publish an entry in BigQuery
 	h.recordBeanChange(ctx, req, userEmail)
+
+	// Send a webhoAthlete aspirations by the decade:ok event to Discord
+	msg, err := h.discord.WebhookExecute(
+		h.cfg.Discord.Webhooks.Beans.WebhookID,
+		h.cfg.Discord.Webhooks.Beans.Token,
+		false,
+		&discordgo.WebhookParams{
+			Content: "A bean was updated!",
+			Embeds: []*discordgo.MessageEmbed{{
+				Author: &discordgo.MessageEmbedAuthor{
+					Name: userEmail,
+				},
+				Title:       fmt.Sprintf("%s - %s", req.Roaster.Name, req.Name),
+				Description: req.Description,
+				URL:         fmt.Sprintf("https://cafebean.org/beans/%s", req.Slug),
+				Fields: []*discordgo.MessageEmbedField{
+					{
+						Name:  "Flavors",
+						Value: strings.Join(req.Flavors, ", "),
+					},
+					{
+						Name:  "Countries",
+						Value: strings.Join(req.Countries, ", "),
+					},
+				},
+				Provider: &discordgo.MessageEmbedProvider{
+					URL:  req.URL,
+					Name: req.Roaster.Name,
+				},
+				Thumbnail: &discordgo.MessageEmbedThumbnail{
+					URL:   req.Photo,
+					Width: 32,
+				},
+			}},
+		},
+	)
+	h.logger.Info(msg)
+	h.logger.Info(err)
 
 	// Send updated bean response
 	w.WriteHeader(http.StatusAccepted)

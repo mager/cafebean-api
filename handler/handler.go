@@ -4,14 +4,18 @@ import (
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/firestore"
 	"cloud.google.com/go/pubsub"
+	"github.com/bwmarrin/discordgo"
 	"github.com/gorilla/mux"
+	"github.com/mager/cafebean-api/config"
 	"go.uber.org/zap"
 )
 
 // Handler for http requests
 type Handler struct {
 	bq       *bigquery.Client
+	cfg      *config.Config
 	database *firestore.Client
+	discord  *discordgo.Session
 	events   *pubsub.Client
 	logger   *zap.SugaredLogger
 	router   *mux.Router
@@ -44,12 +48,14 @@ func (h *Handler) registerRoutes() {
 // New http handler
 func New(
 	bq *bigquery.Client,
+	cfg *config.Config,
 	database *firestore.Client,
+	discord *discordgo.Session,
 	events *pubsub.Client,
 	logger *zap.SugaredLogger,
 	router *mux.Router,
 ) *Handler {
-	h := Handler{bq, database, events, logger, router}
+	h := Handler{bq, cfg, database, discord, events, logger, router}
 	h.registerRoutes()
 
 	return &h
