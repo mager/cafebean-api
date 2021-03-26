@@ -1,40 +1,23 @@
 package config
 
 import (
-	"io/ioutil"
-	"os"
+	"log"
 
-	"gopkg.in/yaml.v2"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
-	Discord `yaml:"discord"`
+	DiscordAuthToken         string
+	DiscordBeansWebhookID    string
+	DiscordBeansWebhookToken string
 }
 
-type Discord struct {
-	AuthToken string          `yaml:"auth_token"`
-	Webhooks  DiscordWebhooks `yaml:"webhooks"`
-}
+func ProvideConfig() Config {
+	var conf Config
 
-type DiscordWebhooks struct {
-	Beans DiscordWebhooksBeansConfig `yaml:"beans"`
-}
-
-type DiscordWebhooksBeansConfig struct {
-	WebhookID string `yaml:"webhook_id"`
-	Token     string `yaml:"token"`
-}
-
-func ProvideConfig() *Config {
-	conf := &Config{}
-	data, err := ioutil.ReadFile("config/base.yaml")
+	err := envconfig.Process("cafebean", &conf)
 	if err != nil {
-		panic(err)
-	}
-
-	data = []byte(os.ExpandEnv(string(data)))
-	if err := yaml.Unmarshal(data, conf); err != nil {
-		panic(err)
+		log.Fatal(err.Error())
 	}
 
 	return conf

@@ -13,7 +13,7 @@ import (
 // Handler for http requests
 type Handler struct {
 	bq       *bigquery.Client
-	cfg      *config.Config
+	cfg      config.Config
 	database *firestore.Client
 	discord  *discordgo.Session
 	events   *pubsub.Client
@@ -48,7 +48,7 @@ func (h *Handler) registerRoutes() {
 // New http handler
 func New(
 	bq *bigquery.Client,
-	cfg *config.Config,
+	cfg config.Config,
 	database *firestore.Client,
 	discord *discordgo.Session,
 	events *pubsub.Client,

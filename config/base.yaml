@@ -1,6 +1,0 @@
-discord:
-  auth_token: ${DISCORD_AUTH_TOKEN}
-  webhooks:
-    beans:
-      webhook_id: 823333826507964446
-      token: ${DISCORD_WEBHOOKS_BEANS_TOKEN}

@@ -45,7 +45,7 @@ func Register(
 	lifecycle fx.Lifecycle,
 	beelineConfig beelineClient.Config,
 	bq *bigquery.Client,
-	cfg *config.Config,
+	cfg config.Config,
 	database *firestore.Client,
 	events *pubsub.Client,
 	logger *zap.SugaredLogger,
@@ -68,7 +68,7 @@ func Register(
 		},
 	)
 
-	discord, err := discordgo.New(fmt.Sprintf("Bot %s", cfg.AuthToken))
+	discord, err := discordgo.New(fmt.Sprintf("Bot %s", cfg.DiscordAuthToken))
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}

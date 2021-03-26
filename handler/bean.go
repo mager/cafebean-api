@@ -112,6 +112,47 @@ func (h *Handler) recordBeanChange(ctx context.Context, req BeanReq, userEmail s
 	}
 }
 
+func (h *Handler) postBeanToDiscord(req BeanReq, userEmail string, action string) (*discordgo.Message, error) {
+	content := "A bean was added!"
+	if action == "edit" {
+		content = "A bean was updated!"
+	}
+	return h.discord.WebhookExecute(
+		h.cfg.DiscordBeansWebhookID,
+		h.cfg.DiscordBeansWebhookToken,
+		false,
+		&discordgo.WebhookParams{
+			Content: content,
+			Embeds: []*discordgo.MessageEmbed{{
+				Author: &discordgo.MessageEmbedAuthor{
+					Name: userEmail,
+				},
+				Title:       fmt.Sprintf("%s - %s", req.Roaster.Name, req.Name),
+				Description: req.Description,
+				URL:         fmt.Sprintf("https://cafebean.org/beans/%s", req.Slug),
+				Fields: []*discordgo.MessageEmbedField{
+					{
+						Name:  "Flavors",
+						Value: strings.Join(req.Flavors, ", "),
+					},
+					{
+						Name:  "Countries",
+						Value: strings.Join(req.Countries, ", "),
+					},
+				},
+				Provider: &discordgo.MessageEmbedProvider{
+					URL:  req.URL,
+					Name: req.Roaster.Name,
+				},
+				Thumbnail: &discordgo.MessageEmbedThumbnail{
+					URL:   req.Photo,
+					Width: 32,
+				},
+			}},
+		},
+	)
+}
+
 func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
 	var (
 		resp = &BeanResp{}
@@ -236,43 +277,10 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 	// Publish an entry in BigQuery
 	h.recordBeanChange(ctx, req, userEmail)
 
-	// Send a webhoAthlete aspirations by the decade:ok event to Discord
-	msg, err := h.discord.WebhookExecute(
-		h.cfg.Discord.Webhooks.Beans.WebhookID,
-		h.cfg.Discord.Webhooks.Beans.Token,
-		false,
-		&discordgo.WebhookParams{
-			Content: "A bean was updated!",
-			Embeds: []*discordgo.MessageEmbed{{
-				Author: &discordgo.MessageEmbedAuthor{
-					Name: userEmail,
-				},
-				Title:       fmt.Sprintf("%s - %s", req.Roaster.Name, req.Name),
-				Description: req.Description,
-				URL:         fmt.Sprintf("https://cafebean.org/beans/%s", req.Slug),
-				Fields: []*discordgo.MessageEmbedField{
-					{
-						Name:  "Flavors",
-						Value: strings.Join(req.Flavors, ", "),
-					},
-					{
-						Name:  "Countries",
-						Value: strings.Join(req.Countries, ", "),
-					},
-				},
-				Provider: &discordgo.MessageEmbedProvider{
-					URL:  req.URL,
-					Name: req.Roaster.Name,
-				},
-				Thumbnail: &discordgo.MessageEmbedThumbnail{
-					URL:   req.Photo,
-					Width: 32,
-				},
-			}},
-		},
-	)
+	// Send a webhook event to Discord
+	msg, err := h.postBeanToDiscord(req, userEmail, "edit")
 	h.logger.Info(msg)
-	h.logger.Info(err)
+	h.logger.Error(err)
 
 	// Send updated bean response
 	w.WriteHeader(http.StatusAccepted)
@@ -347,6 +355,11 @@ func (h *Handler) addBean(w http.ResponseWriter, r *http.Request) {
 
 	// Publish an entry in BigQuery
 	h.recordBeanChange(ctx, req, userEmail)
+
+	// Send a webhook event to Discord
+	msg, err := h.postBeanToDiscord(req, userEmail, "add")
+	h.logger.Info(msg)
+	h.logger.Error(err)
 
 	w.WriteHeader(http.StatusAccepted)
 
