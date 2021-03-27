@@ -46,6 +46,7 @@ func (h *Handler) registerRoutes() {
 
 	// Users
 	h.router.HandleFunc("/profile", h.getProfile).Methods("GET")
+	h.router.HandleFunc("/profile", h.updateProfile).Methods("POST")
 }
 
 // New http handler
