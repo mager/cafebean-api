@@ -155,10 +155,10 @@ func (h *Handler) postBeanToDiscord(req BeanReq, userEmail string, action string
 
 func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
 	var (
+		ctx  = context.TODO()
 		resp = &BeanResp{}
 		vars = mux.Vars(r)
 		slug = vars["slug"]
-		ctx  = context.TODO()
 	)
 
 	// Get the bean
