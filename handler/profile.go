@@ -8,25 +8,14 @@ import (
 	"cloud.google.com/go/firestore"
 )
 
-type User struct {
-	Email    string `firestore:"email" json:"email"`
-	Username string `firestore:"username" json:"username"`
-	Location string `firestore:"location" json:"location"`
+type ProfileResp struct {
+	User UserDB
 }
 
-type UserReq struct {
-	Username string `firestore:"username" json:"username"`
-	Location string `firestore:"location" json:"location"`
-}
-
-type UserResp struct {
-	User User `json:"user"`
-}
-
-func (h *Handler) getProfile(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getUserProfile(w http.ResponseWriter, r *http.Request) {
 	var (
 		ctx       = context.TODO()
-		resp      = &UserResp{}
+		resp      = &ProfileResp{}
 		userEmail = r.Header.Get("X-User-Email")
 	)
 
@@ -39,7 +28,7 @@ func (h *Handler) getProfile(w http.ResponseWriter, r *http.Request) {
 
 		if doc == nil {
 			// Create a new user record
-			newUser := User{
+			newUser := UserDB{
 				Email:    userEmail,
 				Username: "",
 				Location: "",
@@ -57,7 +46,7 @@ func (h *Handler) getProfile(w http.ResponseWriter, r *http.Request) {
 
 			resp.User = newUser
 		} else {
-			var u User
+			var u UserDB
 			doc.DataTo(&u)
 			resp.User = u
 		}
@@ -77,8 +66,8 @@ func (h *Handler) updateProfile(w http.ResponseWriter, r *http.Request) {
 		ctx       = context.TODO()
 		docID     string
 		err       error
-		req       UserReq
-		resp      = &UserResp{}
+		req       UserDB
+		resp      = &ProfileResp{}
 		userEmail = r.Header.Get("X-User-Email")
 	)
 
@@ -132,7 +121,7 @@ func (h *Handler) updateProfile(w http.ResponseWriter, r *http.Request) {
 		"updated_by", userEmail,
 	)
 
-	resp.User = User{
+	resp.User = UserDB{
 		Username: req.Username,
 		Location: req.Location,
 		Email:    userEmail,

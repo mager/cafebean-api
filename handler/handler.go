@@ -44,9 +44,12 @@ func (h *Handler) registerRoutes() {
 	h.router.HandleFunc("/roasters/{slug}", h.editRoaster).Methods("POST")
 	h.router.HandleFunc("/roasters_list", h.getRoastersList).Methods("GET")
 
-	// Users
-	h.router.HandleFunc("/profile", h.getProfile).Methods("GET")
+	// Profile
+	h.router.HandleFunc("/profile", h.getUserProfile).Methods("GET")
 	h.router.HandleFunc("/profile", h.updateProfile).Methods("POST")
+
+	// Users
+	h.router.HandleFunc("/users/{username}", h.getUser).Methods("GET")
 }
 
 // New http handler
