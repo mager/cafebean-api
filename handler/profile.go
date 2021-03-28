@@ -9,7 +9,7 @@ import (
 )
 
 type ProfileResp struct {
-	User UserDB
+	User UserDB `json:"user"`
 }
 
 func (h *Handler) getUserProfile(w http.ResponseWriter, r *http.Request) {
