@@ -46,7 +46,8 @@ func (h *Handler) registerRoutes() {
 
 	// Profile
 	h.router.HandleFunc("/profile", h.getUserProfile).Methods("GET")
-	h.router.HandleFunc("/profile", h.updateProfile).Methods("POST")
+	h.router.HandleFunc("/profile", h.createProfile).Methods("POST")
+	// h.router.HandleFunc("/profile", h.updateProfile).Methods("PATCH")
 
 	// Users
 	h.router.HandleFunc("/users/{username}", h.getUser).Methods("GET")

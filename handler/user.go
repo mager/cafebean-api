@@ -8,15 +8,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type UserDB struct {
-	Email    string `firestore:"email" json:"email"`
-	Location string `firestore:"location" json:"location"`
-	Username string `firestore:"username" json:"username"`
+type User struct {
+	Photo    string `json:"photo"`
+	Username string `json:"username"`
 }
 
-type PublicUser struct {
-	Location string `json:"location"`
-	Username string `json:"username"`
+type UserDB struct {
+	Email    string `firestore:"email" json:"email"`
+	Photo    string `firestore:"photo" json:"photo"`
+	Username string `firestore:"username" json:"username"`
 }
 
 type PrivateUser struct {
@@ -24,9 +24,10 @@ type PrivateUser struct {
 }
 
 type UserResp struct {
-	User PublicUser `json:"user"`
+	User User `json:"user"`
 }
 
+// getUser fetches public user information
 func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 	var (
 		ctx       = context.TODO()
@@ -56,7 +57,7 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		var u PublicUser
+		var u User
 		doc.DataTo(&u)
 		resp.User = u
 
