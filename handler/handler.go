@@ -45,6 +45,7 @@ func (h *Handler) registerRoutes() {
 	h.router.HandleFunc("/roasters_list", h.getRoastersList).Methods("GET")
 
 	// Profile
+	h.router.HandleFunc("/check_username", h.checkUsername).Methods("GET").Queries("username", "{username}")
 	h.router.HandleFunc("/profile", h.getProfile).Methods("GET")
 	h.router.HandleFunc("/profile", h.createProfile).Methods("POST")
 	h.router.HandleFunc("/profile", h.updateProfile).Methods("PATCH")
