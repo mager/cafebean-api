@@ -4,22 +4,32 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+
+	"cloud.google.com/go/firestore"
 )
+
+type Profile struct {
+	Username string `json:"username"`
+}
+
+type ProfilePayload struct {
+	User Profile `json:"user"`
+}
 
 type CreateProfileResp struct {
 	User User `json:"user"`
 }
 
-type ProfileResp struct {
+type GetProfileResp struct {
 	User UserDB `json:"user"`
 }
 
-// getUserProfile fetches the user's private profile info (and creates
-// it if it doesn't exist)
-func (h *Handler) getUserProfile(w http.ResponseWriter, r *http.Request) {
+// getUserProfile fetches the user's private profile info
+// TODO: Add better security
+func (h *Handler) getProfile(w http.ResponseWriter, r *http.Request) {
 	var (
 		ctx       = context.TODO()
-		resp      = &ProfileResp{}
+		resp      = &GetProfileResp{}
 		userEmail = r.Header.Get("X-User-Email")
 	)
 
@@ -52,6 +62,7 @@ func (h *Handler) getUserProfile(w http.ResponseWriter, r *http.Request) {
 // createProfile initializes the profile for the user.
 // The initial payload comes from Auth0 and has a default nickname
 // and profile photo.
+// TODO: Add better security
 func (h *Handler) createProfile(w http.ResponseWriter, r *http.Request) {
 	var (
 		ctx       = context.TODO()
@@ -111,69 +122,76 @@ func (h *Handler) createProfile(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-// func (h *Handler) updateProfile(w http.ResponseWriter, r *http.Request) {
-// 	var (
-// 		ctx       = context.TODO()
-// 		docID     string
-// 		err       error
-// 		req       UserDB
-// 		resp      = &CreateProfileResp{}
-// 		userEmail = r.Header.Get("X-User-Email")
-// 	)
+// TODO: Add better security
+func (h *Handler) updateProfile(w http.ResponseWriter, r *http.Request) {
+	var (
+		ctx       = context.TODO()
+		docID     string
+		err       error
+		req       ProfilePayload
+		resp      = &ProfilePayload{}
+		userEmail = r.Header.Get("X-User-Email")
+	)
 
-// 	err = json.NewDecoder(r.Body).Decode(&req)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	}
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	username := req.User.Username
 
-// 	// Fetch the user
-// 	iter := h.database.Collection("users").Where("email", "==", userEmail).Documents(ctx)
-// 	for {
-// 		doc, err := iter.Next()
+	// Fetch the user
+	iter := h.database.Collection("users").Where("email", "==", userEmail).Documents(ctx)
+	for {
+		doc, err := iter.Next()
 
-// 		if doc == nil {
-// 			http.Error(w, "invalid user", http.StatusBadRequest)
-// 			return
-// 		}
+		if doc == nil {
+			http.Error(w, "invalid user", http.StatusBadRequest)
+			return
+		}
 
-// 		if err != nil {
-// 			http.Error(w, err.Error(), http.StatusBadRequest)
-// 			return
-// 		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
-// 		docID = doc.Ref.ID
+		// Validate user
+		var u UserDB
+		doc.DataTo(&u)
+		if u.Email != userEmail {
+			http.Error(w, "only the user can update their profile", http.StatusBadRequest)
+			return
+		}
 
-// 		break
-// 	}
+		docID = doc.Ref.ID
 
-// 	// Update the user
-// 	user := h.database.Collection("users").Doc(docID)
-// 	docsnap, err := user.Get(ctx)
-// 	if err != nil {
-// 		h.logger.Error(err)
-// 		http.Error(w, "invalid user", http.StatusBadRequest)
-// 		return
-// 	}
+		break
+	}
 
-// 	result, _ := user.Update(
-// 		ctx,
-// 		[]firestore.Update{
-// 			{Path: "email", Value: userEmail},
-// 			{Path: "username", Value: req.Username},
-// 		},
-// 	)
-// 	h.logger.Infow(
-// 		"User updated",
-// 		"id", docsnap.Ref.ID,
-// 		"updated_at", result.UpdateTime,
-// 		"updated_by", userEmail,
-// 	)
+	// Update the user
+	user := h.database.Collection("users").Doc(docID)
+	docsnap, err := user.Get(ctx)
+	if err != nil {
+		h.logger.Error(err)
+		http.Error(w, "invalid user", http.StatusBadRequest)
+		return
+	}
 
-// 	resp.User = UserDB{
-// 		Username: req.Username,
-// 		Email:    userEmail,
-// 	}
+	result, _ := user.Update(
+		ctx,
+		[]firestore.Update{
+			{Path: "username", Value: username},
+		},
+	)
+	h.logger.Infow(
+		"User updated",
+		"id", docsnap.Ref.ID,
+		"username", username,
+		"updated_at", result.UpdateTime,
+		"updated_by", userEmail,
+	)
 
-// 	json.NewEncoder(w).Encode(resp)
-// }
+	resp.User.Username = username
+
+	json.NewEncoder(w).Encode(resp)
+}
