@@ -29,6 +29,7 @@ type ErrorMessage struct {
 // RegisterRoutes for all http endpoints
 func (h *Handler) registerRoutes() {
 	// Stats
+	// TODO: Cache
 	h.router.HandleFunc("/stats", h.getStats).Methods("GET")
 
 	// Beans
@@ -47,8 +48,8 @@ func (h *Handler) registerRoutes() {
 	// Profile
 	h.router.HandleFunc("/check_username", h.checkUsername).Methods("GET").Queries("username", "{username}")
 	h.router.HandleFunc("/profile", h.getProfile).Methods("GET")
-	h.router.HandleFunc("/profile", h.createProfile).Methods("POST")
-	h.router.HandleFunc("/profile", h.updateProfile).Methods("PATCH")
+	h.router.HandleFunc("/profile", h.addProfile).Methods("POST")
+	h.router.HandleFunc("/profile", h.editProfile).Methods("PATCH")
 
 	// Users
 	h.router.HandleFunc("/users/{username}", h.getUser).Methods("GET")
