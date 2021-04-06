@@ -30,6 +30,12 @@ type Bean struct {
 	Year        int64      `firestore:"year" json:"year"`
 }
 
+type BeanSimple struct {
+	Name    string `json:"name"`
+	Roaster string `json:"roaster"`
+	Slug    string `json:"slug"`
+}
+
 // BeanDB represents a Bean in firestore
 type BeanDB struct {
 	Bean
@@ -68,6 +74,11 @@ type BeanResp struct {
 // BeansResp is the response for the GET /beans endpoint
 type BeansResp struct {
 	Beans []Bean `json:"beans"`
+}
+
+// BeansListResp returns a list of unique beans
+type BeansListResp struct {
+	Beans []BeanSimple `json:"beans"`
 }
 
 func docToBean(doc *firestore.DocumentSnapshot) Bean {

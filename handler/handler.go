@@ -37,6 +37,7 @@ func (h *Handler) registerRoutes() {
 	h.router.HandleFunc("/beans", h.addBean).Methods("POST")
 	h.router.HandleFunc("/beans/{slug}", h.getBean).Methods("GET")
 	h.router.HandleFunc("/beans/{slug}", h.editBean).Methods("POST")
+	h.router.HandleFunc("/beans_list", h.getBeansList).Methods("GET")
 
 	// Roasters
 	h.router.HandleFunc("/roasters", h.getRoasters).Methods("GET")
