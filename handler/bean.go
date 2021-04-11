@@ -66,6 +66,14 @@ type BeanReq struct {
 	Bean
 }
 
+// BeanReview is a review of a bean by a user
+type BeanReview struct {
+	Bean   string  `firestore:"bean" json:"bean"`
+	User   string  `firestore:"user" json:"user"`
+	Review string  `firestore:"review" json:"review"`
+	Rating float64 `firestore:"rating" json:"rating"`
+}
+
 // BeanResp is the response for the GET /bean/{slug} endpoint
 type BeanResp struct {
 	Bean Bean `json:"bean"`
@@ -125,6 +133,12 @@ func (h *Handler) postBeanToDiscord(req BeanReq, userEmail string, action string
 	if action == "edit" {
 		content = "A bean was updated!"
 	}
+
+	countries := ""
+	if len(req.Countries) > 0 {
+		countries = strings.Join(req.Countries, ", ")
+	}
+
 	return h.discord.WebhookExecute(
 		h.cfg.DiscordBeansWebhookID,
 		h.cfg.DiscordBeansWebhookToken,
@@ -145,7 +159,7 @@ func (h *Handler) postBeanToDiscord(req BeanReq, userEmail string, action string
 					},
 					{
 						Name:  "Countries",
-						Value: strings.Join(req.Countries, ", "),
+						Value: countries,
 					},
 				},
 				Provider: &discordgo.MessageEmbedProvider{
