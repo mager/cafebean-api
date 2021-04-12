@@ -4,25 +4,24 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
-	"cloud.google.com/go/firestore"
 	"github.com/gorilla/mux"
+	"google.golang.org/api/iterator"
 )
 
 // GetBeanResp is the response for the GET /bean/{slug} endpoint
 type GetBeanResp struct {
-	BeanPath string       `json:"bean_path"`
-	Bean     Bean         `json:"bean"`
-	Reviews  []BeanReview `json:"reviews"`
+	Bean    Bean         `json:"bean"`
+	Reviews []BeanReview `json:"reviews"`
 }
 
 func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
 	var (
-		ctx        = context.TODO()
-		resp       = &GetBeanResp{}
-		vars       = mux.Vars(r)
-		slug       = vars["slug"]
-		beanDocRef *firestore.DocumentRef
+		ctx  = context.TODO()
+		resp = &GetBeanResp{}
+		vars = mux.Vars(r)
+		slug = vars["slug"]
 	)
 
 	// Get the bean
@@ -40,28 +39,30 @@ func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
 		}
 
 		resp.Bean = docToBean(beanDoc)
-		beanDocRef = beanDoc.Ref
 		break
 	}
 
 	// Get reviews
-	reviewsIter := h.database.Collection("reviews").Where("bean", "==", beanDocRef).Documents(ctx)
+	q := h.database.Collection("reviews").Where("bean", "==", slug)
+	iter := q.Documents(ctx)
+	defer iter.Stop()
+
 	for {
-		reviewsDoc, err := reviewsIter.Next()
-		if reviewsDoc == nil {
+		doc, err := iter.Next()
+		if err == iterator.Done {
 			break
 		}
-
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
-		var r BeanReview
-		reviewsDoc.DataTo(&r)
-		resp.Reviews = append(resp.Reviews, r)
-
-		break
+		data := doc.Data()
+		resp.Reviews = append(resp.Reviews, BeanReview{
+			Rating:    data["rating"].(float64),
+			Review:    data["review"].(string),
+			UpdatedAt: data["updated_at"].(time.Time),
+			User:      data["user"].(string),
+		})
 	}
 
 	json.NewEncoder(w).Encode(resp)
