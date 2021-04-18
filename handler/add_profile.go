@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 )
 
 type AddProfileResp struct {
@@ -47,9 +48,10 @@ func (h *Handler) addProfile(w http.ResponseWriter, r *http.Request) {
 
 		// Create a new user record if it doesn't exist
 		newUser := UserDB{
-			Email:    req.Email,
-			Username: req.Username,
-			Photo:    req.Photo,
+			Email:     req.Email,
+			Username:  req.Username,
+			Photo:     req.Photo,
+			CreatedAt: time.Now(),
 		}
 		created, _, err := h.database.Collection("users").Add(ctx, newUser)
 		if err != nil {
@@ -63,8 +65,9 @@ func (h *Handler) addProfile(w http.ResponseWriter, r *http.Request) {
 		)
 
 		resp.User = User{
-			Photo:    newUser.Photo,
-			Username: newUser.Username,
+			Photo:     newUser.Photo,
+			Username:  newUser.Username,
+			CreatedAt: newUser.CreatedAt,
 		}
 
 		break

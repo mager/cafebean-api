@@ -82,9 +82,7 @@ func (h *Handler) editBean(w http.ResponseWriter, r *http.Request) {
 	h.recordBeanChange(ctx, req, userEmail)
 
 	// Send a webhook event to Discord
-	msg, err := h.postBeanToDiscord(req, userEmail, "edit")
-	h.logger.Info(msg)
-	h.logger.Error(err)
+	h.postBeanToDiscord(req, userEmail, "edit")
 
 	// Send updated bean response
 	w.WriteHeader(http.StatusAccepted)

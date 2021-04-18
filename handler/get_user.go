@@ -38,11 +38,13 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+
 		var u User
 		doc.DataTo(&u)
 		resp.User = u
 
 		break
 	}
+
 	json.NewEncoder(w).Encode(resp)
 }

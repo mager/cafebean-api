@@ -1,14 +1,18 @@
 package handler
 
+import "time"
+
 type User struct {
-	Photo    string `json:"photo"`
-	Username string `json:"username"`
+	Photo     string    `firestore:"photo" json:"photo"`
+	Username  string    `firestore:"username" json:"username"`
+	CreatedAt time.Time `firestore:"created_at" json:"created_at"`
 }
 
 type UserDB struct {
-	Email    string `firestore:"email" json:"email"`
-	Photo    string `firestore:"photo" json:"photo"`
-	Username string `firestore:"username" json:"username"`
+	Email     string    `firestore:"email" json:"email"`
+	Photo     string    `firestore:"photo" json:"photo"`
+	Username  string    `firestore:"username" json:"username"`
+	CreatedAt time.Time `firestore:"created_at" json:"created_at"`
 }
 
 type PrivateUser struct {
