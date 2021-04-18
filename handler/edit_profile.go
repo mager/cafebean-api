@@ -25,6 +25,7 @@ func (h *Handler) editProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	username := req.User.Username
+	location := req.User.Location
 
 	// Fetch the user
 	iter := h.database.Collection("users").Where("email", "==", userEmail).Documents(ctx)
@@ -67,6 +68,7 @@ func (h *Handler) editProfile(w http.ResponseWriter, r *http.Request) {
 		ctx,
 		[]firestore.Update{
 			{Path: "username", Value: username},
+			{Path: "location", Value: location},
 		},
 	)
 	h.logger.Infow(
@@ -78,6 +80,7 @@ func (h *Handler) editProfile(w http.ResponseWriter, r *http.Request) {
 	)
 
 	resp.User.Username = username
+	resp.User.Location = location
 
 	json.NewEncoder(w).Encode(resp)
 }
