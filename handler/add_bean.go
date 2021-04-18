@@ -66,9 +66,7 @@ func (h *Handler) addBean(w http.ResponseWriter, r *http.Request) {
 	h.recordBeanChange(ctx, req, userEmail)
 
 	// Send a webhook event to Discord
-	msg, err := h.postBeanToDiscord(req, userEmail, "add")
-	h.logger.Info(msg)
-	h.logger.Error(err)
+	h.postBeanToDiscord(req, userEmail, "add")
 
 	w.WriteHeader(http.StatusAccepted)
 
