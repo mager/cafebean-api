@@ -12,8 +12,8 @@ import (
 
 // GetBeanResp is the response for the GET /bean/{slug} endpoint
 type GetBeanResp struct {
-	Bean    Bean         `json:"bean"`
-	Reviews []BeanReview `json:"reviews"`
+	Bean    Bean     `json:"bean"`
+	Reviews []Review `json:"reviews"`
 }
 
 func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +57,7 @@ func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		data := doc.Data()
-		resp.Reviews = append(resp.Reviews, BeanReview{
+		resp.Reviews = append(resp.Reviews, Review{
 			Rating:    data["rating"].(float64),
 			Review:    data["review"].(string),
 			UpdatedAt: data["updated_at"].(time.Time),

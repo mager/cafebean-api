@@ -54,6 +54,9 @@ func (h *Handler) registerRoutes() {
 
 	// Users
 	h.router.HandleFunc("/users/{username}", h.getUser).Methods("GET")
+
+	// Reviews
+	h.router.HandleFunc("/reviews", h.getReviews).Methods("GET")
 }
 
 // New http handler

@@ -66,14 +66,6 @@ type BeanReq struct {
 	Bean
 }
 
-// BeanReview is a review of a bean by a user
-type BeanReview struct {
-	Rating    float64   `firestore:"rating" json:"rating"`
-	Review    string    `firestore:"review" json:"review"`
-	User      string    `firestore:"user" json:"user"`
-	UpdatedAt time.Time `firestore:"updated_at" json:"updated_at"`
-}
-
 // BeanResp is the response for the GET /bean/{slug} endpoint
 type BeanResp struct {
 	Bean Bean `json:"bean"`
