@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"database/sql"
+
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/firestore"
 	"cloud.google.com/go/pubsub"
@@ -18,6 +20,7 @@ type Handler struct {
 	discord  *discordgo.Session
 	events   *pubsub.Client
 	logger   *zap.SugaredLogger
+	postgres *sql.DB
 	router   *mux.Router
 }
 
@@ -67,9 +70,10 @@ func New(
 	discord *discordgo.Session,
 	events *pubsub.Client,
 	logger *zap.SugaredLogger,
+	postgres *sql.DB,
 	router *mux.Router,
 ) *Handler {
-	h := Handler{bq, cfg, database, discord, events, logger, router}
+	h := Handler{bq, cfg, database, discord, events, logger, postgres, router}
 	h.registerRoutes()
 
 	return &h

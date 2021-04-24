@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 	"github.com/mager/cafebean-api/events"
 	"github.com/mager/cafebean-api/handler"
 	"github.com/mager/cafebean-api/logger"
+	"github.com/mager/cafebean-api/postgres"
 	"github.com/mager/cafebean-api/router"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
@@ -28,6 +30,7 @@ func main() {
 			bq.Options,
 			config.Options,
 			database.Options,
+			postgres.Options,
 			events.Options,
 			router.Options,
 			logger.Options,
@@ -42,6 +45,7 @@ func Register(
 	bq *bigquery.Client,
 	cfg config.Config,
 	database *firestore.Client,
+	postgres *sql.DB,
 	events *pubsub.Client,
 	logger *zap.SugaredLogger,
 	router *mux.Router,
@@ -66,5 +70,5 @@ func Register(
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
-	handler.New(bq, cfg, database, discord, events, logger, router)
+	handler.New(bq, cfg, database, discord, events, logger, postgres, router)
 }
