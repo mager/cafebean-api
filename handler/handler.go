@@ -33,6 +33,7 @@ type ErrorMessage struct {
 func (h *Handler) registerRoutes() {
 	// Stats
 	// TODO: Cache
+	h.router.HandleFunc("/ip", h.getIP).Methods("GET")
 	h.router.HandleFunc("/stats", h.getStats).Methods("GET")
 
 	// Beans
