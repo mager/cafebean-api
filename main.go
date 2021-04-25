@@ -12,6 +12,7 @@ import (
 	"cloud.google.com/go/pubsub"
 	"github.com/bwmarrin/discordgo"
 	"github.com/gorilla/mux"
+	"github.com/kelseyhightower/envconfig"
 	bq "github.com/mager/cafebean-api/bigquery"
 	"github.com/mager/cafebean-api/config"
 	"github.com/mager/cafebean-api/database"
@@ -24,11 +25,19 @@ import (
 	"go.uber.org/zap"
 )
 
+type Config struct {
+	DiscordAuthToken         string
+	DiscordBeansWebhookID    string
+	DiscordBeansWebhookToken string
+
+	PostgresHostname string
+	PostgresPassword string
+}
+
 func main() {
 	fx.New(
 		fx.Provide(
 			bq.Options,
-			config.Options,
 			database.Options,
 			postgres.Options,
 			events.Options,
@@ -43,13 +52,20 @@ func main() {
 func Register(
 	lifecycle fx.Lifecycle,
 	bq *bigquery.Client,
-	cfg config.Config,
 	database *firestore.Client,
 	postgres *sql.DB,
 	events *pubsub.Client,
 	logger *zap.SugaredLogger,
 	router *mux.Router,
 ) {
+	// Initialize config
+	var cfg config.Config
+
+	err := envconfig.Process("cafebean", &cfg)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	lifecycle.Append(
 		fx.Hook{
 			OnStart: func(context.Context) error {

@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
-	"google.golang.org/api/iterator"
+	"cloud.google.com/go/firestore"
 )
 
 // GetReviewsResp is the response for the GET /reviews endpoint
@@ -15,46 +16,72 @@ type GetReviewsResp struct {
 
 func (h *Handler) getReviews(w http.ResponseWriter, r *http.Request) {
 	var (
-		resp      = &GetReviewsResp{}
-		ctx       = context.TODO()
-		beanSlugs []string
-		reviews   []ReviewWithBean
-		beans     []Bean
+		resp     = &GetReviewsResp{}
+		ctx      = context.TODO()
+		beanDocs = []*firestore.DocumentRef{}
+		reviews  []ReviewWithBean
+		beans    = h.database.Collection("beans")
 	)
 
-	// Get all reviews
-	reviewsIter := h.database.Collection("reviews").Documents(ctx)
-	for {
-		doc, err := reviewsIter.Next()
-		if err == iterator.Done {
-			break
-		}
+	// Call Postgres
+	rows, err := h.postgres.Query(`
+		SELECT
+			r.review_id,
+			r.rating,
+			r.review,
+			r.bean_ref,
+			r.updated_at,
+			u.username as user
+		FROM reviews r
+		LEFT JOIN users u on r.user_id = u.user_id;
+	`)
+	if err != nil {
+		h.logger.Error(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var reviewId int
+		var rating float64
+		var review string
+		var beanRef string
+		var updatedAt time.Time
+		var user string
+		err = rows.Scan(&reviewId, &rating, &review, &beanRef, &updatedAt, &user)
 		if err != nil {
-			h.logger.Fatalf("Failed to iterate: %v", err)
+			h.logger.Error(err)
 		}
+		h.logger.Infow(
+			"Result from Postgres",
+			"reviewId", reviewId,
+			"beanRef", beanRef,
+			"review", review,
+			"rating", rating,
+			"updatedAt", updatedAt,
+			"user", user,
+		)
 
-		data := doc.Data()
-		beanSlugs = append(beanSlugs, data["bean"].(string))
-		reviews = append(reviews, docToReviewWithBean(doc))
+		reviews = append(reviews, ReviewWithBean{
+			Review:    review,
+			Rating:    rating,
+			UpdatedAt: updatedAt,
+			User:      user,
+		})
+		beanDocs = append(beanDocs, beans.Doc(beanRef))
+	}
+	err = rows.Err()
+	if err != nil {
+		h.logger.Error(err)
 	}
 
 	// Fetch related beans
-	beansIter := h.database.Collection("beans").Where("slug", "in", beanSlugs).Documents(ctx)
-	for {
-		doc, err := beansIter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			h.logger.Fatalf("Failed to iterate: %v", err)
-		}
-
-		beans = append(beans, docToBean(doc))
+	beanSnaps, err := h.database.GetAll(ctx, beanDocs)
+	if err != nil {
+		// TODO: Handle error.
+		h.logger.Error(err)
 	}
 
-	// Populate response
 	for i, review := range reviews {
-		review.Bean = beans[i]
+		review.Bean = docToBean(beanSnaps[i])
 		resp.Reviews = append(resp.Reviews, review)
 	}
 
