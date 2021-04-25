@@ -32,12 +32,14 @@ func ProvidePostgres() *sql.DB {
 		host, port, user, password, dbname)
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
-		panic(err)
+		fmt.Println(err.Error())
+		return &sql.DB{}
 	}
 	// defer db.Close()
 	err = db.Ping()
 	if err != nil {
-		panic(err)
+		fmt.Println(err.Error())
+		return &sql.DB{}
 	}
 	fmt.Printf("Successfully connected to Postgres db (%s)\n", host)
 
