@@ -19,6 +19,11 @@ func ProvidePostgres() *sql.DB {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	if !conf.ReviewsEnabled {
+		return &sql.DB{}
+	}
+
 	var (
 		host     = conf.PostgresHostname
 		port     = 5432
@@ -35,7 +40,6 @@ func ProvidePostgres() *sql.DB {
 		fmt.Println(err.Error())
 		return &sql.DB{}
 	}
-	// defer db.Close()
 	err = db.Ping()
 	if err != nil {
 		fmt.Println(err.Error())

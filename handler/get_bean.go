@@ -46,8 +46,9 @@ func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
 
 	h.logger.Info(beanDoc.Ref.ID)
 
-	// Get reviews
-	rows, err := h.postgres.Query(`
+	if h.cfg.ReviewsEnabled {
+		// Get reviews
+		rows, err := h.postgres.Query(`
 		SELECT
 			r.review_id,
 			r.rating,
@@ -59,45 +60,46 @@ func (h *Handler) getBean(w http.ResponseWriter, r *http.Request) {
 		LEFT JOIN users u on r.user_id = u.user_id
 		WHERE r.bean_ref = $1;
 	`, beanDoc.Ref.ID)
-	if err != nil {
-		h.logger.Error(err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var reviewId int
-		var rating float64
-		var review string
-		var beanRef string
-		var updatedAt time.Time
-		var user string
-		err = rows.Scan(&reviewId, &rating, &review, &beanRef, &updatedAt, &user)
 		if err != nil {
 			h.logger.Error(err)
 		}
-		h.logger.Infow(
-			"Result from Postgres",
-			"reviewId", reviewId,
-			"beanRef", beanRef,
-			"review", review,
-			"rating", rating,
-			"updatedAt", updatedAt,
-			"user", user,
-		)
+		defer rows.Close()
+		for rows.Next() {
+			var reviewId int
+			var rating float64
+			var review string
+			var beanRef string
+			var updatedAt time.Time
+			var user string
+			err = rows.Scan(&reviewId, &rating, &review, &beanRef, &updatedAt, &user)
+			if err != nil {
+				h.logger.Error(err)
+			}
+			h.logger.Infow(
+				"Result from Postgres",
+				"reviewId", reviewId,
+				"beanRef", beanRef,
+				"review", review,
+				"rating", rating,
+				"updatedAt", updatedAt,
+				"user", user,
+			)
 
-		reviews = append(reviews, Review{
-			Review:    review,
-			Rating:    rating,
-			UpdatedAt: updatedAt,
-			User:      user,
-			Bean:      slug,
-		})
-	}
-	err = rows.Err()
-	if err != nil {
-		h.logger.Error(err)
-	}
+			reviews = append(reviews, Review{
+				Review:    review,
+				Rating:    rating,
+				UpdatedAt: updatedAt,
+				User:      user,
+				Bean:      slug,
+			})
+		}
+		err = rows.Err()
+		if err != nil {
+			h.logger.Error(err)
+		}
 
-	resp.Reviews = reviews
+		resp.Reviews = reviews
+	}
 
 	json.NewEncoder(w).Encode(resp)
 }

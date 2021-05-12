@@ -7,4 +7,6 @@ type Config struct {
 
 	PostgresHostname string
 	PostgresPassword string
+
+	ReviewsEnabled bool
 }
