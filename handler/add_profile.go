@@ -26,7 +26,7 @@ func (h *Handler) addProfile(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		http.Error(w, "error handling reques", http.StatusBadRequest)
+		http.Error(w, "error handling request", http.StatusBadRequest)
 		return
 	}
 

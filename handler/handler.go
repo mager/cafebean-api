@@ -61,6 +61,10 @@ func (h *Handler) registerRoutes() {
 
 	// Reviews
 	h.router.HandleFunc("/reviews", h.getReviews).Methods("GET")
+
+	// Search
+	h.router.HandleFunc("/search", h.globalSearch).Methods("POST")
+
 }
 
 // New http handler
