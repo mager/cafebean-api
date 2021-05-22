@@ -72,20 +72,29 @@ func Register(
 }
 
 func Test_globalSearch(t *testing.T) {
-	var (
-	// ctx = context.TODO()
-	)
 	type test struct {
 		name  string
 		query string
+		only  string
 		exp   string
 	}
 
 	tests := []test{
 		{
-			name:  "roaster slug",
+			name:  "roaster only matches slug",
 			query: "ipsento",
+			only:  "roaster",
 			exp:   "{\"results\":[{\"roaster\":{\"name\":\"Ipsento\",\"slug\":\"ipsento\"}}]}\n",
+		},
+		{
+			name:  "beans matches slug",
+			query: "cascade",
+			exp:   "{\"results\":[{\"bean\":{\"name\":\"Cascade Espresso\",\"slug\":\"ipsento-cascade-espresso\",\"flavors\":[\"dark chocolate\",\"mixed nuts\"]},\"roaster\":{\"name\":\"Ipsento\",\"slug\":\"ipsento\"}}]}\n",
+		},
+		{
+			name:  "flavors match",
+			query: "jordan almond",
+			exp:   "{\"results\":[{\"bean\":{\"name\":\"Jumpstart\",\"slug\":\"partners-coffee-jumpstart\",\"flavors\":[\"caramel\",\"jordan almond\",\"poached pear\"]},\"roaster\":{\"name\":\"Partners Coffee\",\"slug\":\"partners-coffee\"}}]}\n",
 		},
 	}
 
@@ -106,7 +115,7 @@ func Test_globalSearch(t *testing.T) {
 		// perform setUp before each test here
 		t.Run(tc.name, func(t *testing.T) {
 			t.Log(tc.query)
-			var jsonStr = []byte(fmt.Sprintf(`{"query":"%s"}`, tc.query))
+			var jsonStr = []byte(fmt.Sprintf(`{"query":"%s","only":"%s"}`, tc.query, tc.only))
 
 			req, _ := http.NewRequest("POST", "http://localhost:8080/search", bytes.NewBuffer(jsonStr))
 			req.Header.Set("X-User-Email", "test@cafebean.org")

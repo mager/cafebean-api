@@ -11,6 +11,7 @@ import (
 
 type GlobalSearchReq struct {
 	Query string `json:"query"`
+	Only  string `json:"only"`
 }
 
 type GlobalSearchResp struct {
@@ -27,8 +28,9 @@ type GlobalSearchRoaster struct {
 	Slug string `json:"slug"`
 }
 type GlobalSearchBean struct {
-	Name string `json:"name"`
-	Slug string `json:"slug"`
+	Name    string   `json:"name"`
+	Slug    string   `json:"slug"`
+	Flavors []string `json:"flavors"`
 }
 
 // globalSearch initializes the profile for the user.
@@ -66,7 +68,7 @@ func (h *Handler) globalSearch(w http.ResponseWriter, r *http.Request) {
 		r := docToRoaster(doc)
 
 		// Check if the search query is a substring of a slug or a "spaced" version
-		// of the slug (replacing dashes with spaces)
+		// of a roaster slug (replacing dashes with spaces)
 		spacedSlug := strings.Replace(r.Slug, "-", " ", -1)
 		if strings.Contains(r.Slug, query) || strings.Contains(spacedSlug, query) {
 			resp.Results = append(resp.Results, GlobalSearchResult{
@@ -77,7 +79,57 @@ func (h *Handler) globalSearch(w http.ResponseWriter, r *http.Request) {
 				Bean: nil,
 			})
 		}
-
 	}
+
+	// Fetch all the beans
+	if req.Only != "roaster" {
+		beansIter := h.database.Collection("beans").Documents(ctx)
+		for {
+			doc, err := beansIter.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				h.logger.Fatalf("Failed to iterate: %v", err)
+			}
+
+			b := docToBean(doc)
+
+			// Check if the search query is a substring of a slug or a "spaced" version
+			// of a bean slug (replacing dashes with spaces)
+			spacedSlug := strings.Replace(b.Slug, "-", " ", -1)
+			if strings.Contains(b.Slug, query) || strings.Contains(spacedSlug, query) {
+				resp.Results = append(resp.Results, GlobalSearchResult{
+					Roaster: GlobalSearchRoaster{
+						Name: b.Roaster.Name,
+						Slug: b.Roaster.Slug,
+					},
+					Bean: &GlobalSearchBean{
+						Name:    b.Name,
+						Slug:    b.Slug,
+						Flavors: b.Flavors,
+					},
+				})
+			}
+
+			// Check if the search query matches any of the bean flavors
+			for _, f := range b.Flavors {
+				if f == query {
+					resp.Results = append(resp.Results, GlobalSearchResult{
+						Roaster: GlobalSearchRoaster{
+							Name: b.Roaster.Name,
+							Slug: b.Roaster.Slug,
+						},
+						Bean: &GlobalSearchBean{
+							Name:    b.Name,
+							Slug:    b.Slug,
+							Flavors: b.Flavors,
+						},
+					})
+				}
+			}
+		}
+	}
+
 	json.NewEncoder(w).Encode(resp)
 }
