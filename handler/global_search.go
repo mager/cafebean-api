@@ -38,10 +38,10 @@ func (h *Handler) globalSearch(w http.ResponseWriter, r *http.Request) {
 	var (
 		ctx       = context.TODO()
 		err       error
-		req       GlobalSearchReq
-		userEmail = r.Header.Get("X-User-Email")
-		resp      = &GlobalSearchResp{}
 		query     string
+		userEmail = r.Header.Get("X-User-Email")
+		req       GlobalSearchReq
+		resp      = &GlobalSearchResp{}
 	)
 
 	err = json.NewDecoder(r.Body).Decode(&req)

@@ -64,7 +64,6 @@ func (h *Handler) registerRoutes() {
 
 	// Search
 	h.router.HandleFunc("/search", h.globalSearch).Methods("POST")
-
 }
 
 // New http handler
