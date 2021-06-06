@@ -10,9 +10,7 @@ build:
 deploy:
 	gcloud run deploy cafebean-api \
 		--image gcr.io/cafebean/cafebean-api \
-		--platform managed \
-		--vpc-connector=cafebean-connector \
-		--vpc-egress=all
+		--platform managed
 
 ship:
 	make test && make build && make deploy
