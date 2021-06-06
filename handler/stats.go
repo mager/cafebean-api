@@ -4,16 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"strings"
-
-	"cloud.google.com/go/firestore"
 )
 
 // Stats represents stats
 type Stats struct {
 	BeanCount        int               `firestore:"bean_count" json:"bean_count"`
 	RoasterCount     int               `firestore:"roaster_count" json:"roaster_count"`
-	FlavorMap        map[string]int    `json:"flavor_map"`
 	RoasterLocations []RoasterLocation `json:"roaster_locations"`
 }
 
@@ -26,24 +22,6 @@ type RoasterLocation struct {
 
 type StatsResp struct {
 	Stats Stats `json:"stats"`
-}
-
-func (h *Handler) getFlavorMap(beans []*firestore.DocumentSnapshot) map[string]int {
-	var flavorMap = make(map[string]int)
-
-	for _, bean := range beans {
-		for _, flavor := range docToBean(bean).Flavors {
-			f := strings.ToLower(flavor)
-			_, ok := flavorMap[f]
-			if ok {
-				flavorMap[f] += 1
-			} else {
-				flavorMap[f] = 1
-			}
-		}
-	}
-
-	return flavorMap
 }
 
 func (h *Handler) getStats(w http.ResponseWriter, r *http.Request) {
@@ -67,9 +45,6 @@ func (h *Handler) getStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp.Stats.RoasterCount = len(roasters)
-
-	// Get flavor map
-	resp.Stats.FlavorMap = h.getFlavorMap(beans)
 
 	// Get roaster locations
 	for _, roaster := range roasters {

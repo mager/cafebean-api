@@ -35,6 +35,7 @@ func (h *Handler) registerRoutes() {
 	// TODO: Cache
 	h.router.HandleFunc("/ip", h.getIP).Methods("GET")
 	h.router.HandleFunc("/stats", h.getStats).Methods("GET")
+	h.router.HandleFunc("/flavors", h.getFlavors).Methods("GET")
 
 	// Beans
 	h.router.HandleFunc("/beans", h.getBeans).Methods("GET")
