@@ -28,6 +28,7 @@ type Bean struct {
 	Slug        string     `firestore:"slug" json:"slug"`
 	URL         string     `firestore:"url" json:"url"`
 	Year        int64      `firestore:"year" json:"year"`
+	FairTrade   string     `firestore:"fair_trade" json:"fair_trade"`
 }
 
 type BeanSimple struct {
