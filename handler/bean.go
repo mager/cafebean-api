@@ -20,15 +20,17 @@ type RoasterMap struct {
 type Bean struct {
 	Countries   []string   `firestore:"countries" json:"countries"`
 	Description string     `firestore:"description" json:"description"`
+	DirectSun   bool       `firestore:"direct_sun" json:"direct_sun"`
+	FairTrade   bool       `firestore:"fair_trade" json:"fair_trade"`
 	Flavors     []string   `firestore:"flavors" json:"flavors"`
 	Name        string     `firestore:"name" json:"name"`
+	Organic     bool       `firestore:"organic" json:"organic"`
 	Photo       string     `firestore:"photo" json:"photo"`
 	Roaster     RoasterMap `firestore:"roaster" json:"roaster"`
 	Shade       string     `firestore:"shade" json:"shade"`
 	Slug        string     `firestore:"slug" json:"slug"`
 	URL         string     `firestore:"url" json:"url"`
 	Year        int64      `firestore:"year" json:"year"`
-	FairTrade   string     `firestore:"fair_trade" json:"fair_trade"`
 }
 
 type BeanSimple struct {
